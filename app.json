@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "plugins":[
+      "expo-document-picker"
+    ],
+    "name": "Cluster Routes",
+    "slug": "Tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Header.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      
+      "resizeMode": "contain",
+      "backgroundColor": "#38947D"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
