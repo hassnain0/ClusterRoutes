@@ -9,7 +9,7 @@ import { View,Button,Text } from 'react-native';
 
   //Class start here
   const AnotherFile=()=>{
-    const [location, setLocation] = useState(null);
+    const [location, setLocation] = useState();
     useEffect(() => {
         async function fetchData() {
           const granted = await requestLocationPermission();

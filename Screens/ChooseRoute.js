@@ -3,83 +3,132 @@ import { StyleSheet,View,  Button, Text, TouchableOpacity, Alert, ScrollView } f
 import { moderateScale } from "./Dimension";
 import { useNavigation } from "@react-navigation/native";
 import  Map from './Map'
-import fetchValuesFunction from "./fetchValuesFunction";
+
 import TrackerFile from "./TrackerFile";
 import Temp from './Temp'
 import firebase from "firebase/compat";
 import { onAuthStateChanged, } from "@firebase/auth";
 
 import {db, firebaseConfig, } from './Firbase'
-import Home from "./Home";
+import { locationPermission, showError,showSucess } from "./Helper/Helper";
 
 const ChooseRoute=()=>{
 
-  const [uid, setUid] = useState(null);
+  const [uid, setUid] = useState();
   const [data,setData]=useState();
   const NavigationContainer=useNavigation();
 
+
+  const [state,setState]=useState({
+    
+    droplocationCords:{},
+    pickupCords:{},
+      
+    })
+    
+  
+
+    const {droplocationCords,pickupCords}=state
   const AddDataToFireStore=()=>{
    
+    // getLiveLocation();
+    try{
     const usersCollection = db.collection('Route')
     const currentUser = firebase.auth().currentUser;
 
+
+console.log('document added!')
 // Add a new document to the collection with the user's data
 usersCollection.doc(currentUser.uid).set({
   email: currentUser.email,
-  pickupCords,
-  droplocationCords
- 
-
-})
-console.log('document added!')    
+     droplocationCords:droplocationCords,
+     pickupCords:pickupCords,
+     
+    })
+   
+    }
+    catch(error){
+      console.log(error)
+    } 
   }
  
   
+//   const getLiveLocation =async()=>{
+//     const locationPermissiondenid=await locationPermission()
+//     if(locationPermissiondenid){
+//       let location = await Location.getCurrentPositionAsync({});
+     
+//        const lat=location.coords.latitude;
+//        const lng=location.coords.longitude;
+// console.log("pickup cords means live location",lat,lng)
+// setState1({
+//   ...state,pickupCords:{
+//   latitude:lat,
+//   longitude:lng,
 
+// },
+
+// }
+
+// )
+            
+//     }
+//   }
+  
     const handleDone=()=>{
-      if(pickupCords==null&&droplocationCords==null){
-      Alert.alert("   Please select location")
+   if(Object.keys(pickupCords).length==0){
+    showError("     Please enter your live  location")    
+  }
+      if(Object.keys(droplocationCords).length==0){
+        showError("     Please enter your  current location")
       }
-      else{
 
-        AddDataToFireStore();
-        NavigationContainer.navigate(Map)
-    
-      }
- 
-          }
+   else{
 
-            //Variables
-    const [state,setState]=useState({
-        pickupCords,droplocationCords,
-      })
+    AddDataToFireStore();
+    showSucess(" Route Assigned sucessfully !")
+    NavigationContainer.goBack()   }
+    }
 
-    
-
-      const {pickupCords,droplocationCords}=state
+                //Variables
+   
 
 //Methods to call pickdrop location cords
-         const fetchAddressCorde=(lat,lng)=>{
-       console.log(" pickupCords Latitude",lat)
-        console.log(" pickupCords longitude",lng)
-        setState({
-          ...state,pickupCords:{
-          latitude:lat,
-          longitude:lng,
-        }})
-      }
+const fetchPickupCords=(lat,lng)=>{
+  try{
+   setState({
+     ...state,pickupCords:{
+     latitude:lat,
+     longitude:lng,
+   
+   },
+
+ })
+ }
+ catch(error){
+   console.log(error)
+ }
+ }
+ 
+
+
             //Methods to call latitude and longitude of target location
       const fetchDestinationCode=(lat,lng)=>{
-        console.log(" Destination Latitude",lat)
-        console.log(" Destination longitude",lng)
+       try{
         setState({
           ...state,droplocationCords:{
           latitude:lat,
           longitude:lng,
-        }})
+        
+        },
+})
       }
-      console.log(" Pickup cords",pickupCords)
-      console.log(" drop location cord ",droplocationCords);
+      catch(error){
+        console.log(error)
+      }
+      }
+   
+      console.log(" drop location cord  from user",droplocationCords);
      
     return(
         <View style={styles.ViewContainer}>
@@ -88,11 +137,11 @@ console.log('document added!')
           style={{backgroundColor:'white',flex:1,padding:24}}>
 
 
-          <TrackerFile placeholderText="Select your current location"
-          fetchAddress={fetchAddressCorde}/>
-
+<TrackerFile placeholderText="Select your starting location of route"  fetchAddress={fetchPickupCords}/>
+         
           <TrackerFile placeholderText="Select your target location"  fetchAddress={fetchDestinationCode}/>
-
+       
+         
          <TouchableOpacity style={styles.submitButton} onPress={handleDone} >
          <Text style={styles.submitButtonText}>Go</Text>
           </TouchableOpacity>   

@@ -1,19 +1,27 @@
 {
   "expo": {
-    "plugins":[
-      "expo-document-picker"
+ "android": {
+      
+      "permissions": ["CAMERA_ROLL", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
+    },
+  
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(Cluster Routes) to use your location."
+        }
+      ]
     ],
+
+   
     "name": "Cluster Routes",
     "slug": "Tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/Header.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      
-      "resizeMode": "contain",
-      "backgroundColor": "#38947D"
-    },
+   
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -24,7 +32,9 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "adaptiveIcon": {
+        
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       }

@@ -10,7 +10,7 @@ import { moderateScale } from './Dimension';
 export default function ImageBottomCard({navigation}){
     return(
       <View  color='#1F6478' style={styles.Cardcontainer}>
-    <Text>Hello</Text>
+    <Image source={require('../assets/Image.jpg')} style={{width:340,height:330,borderRadius:15}}></Image>
       </View>
     )
 }
