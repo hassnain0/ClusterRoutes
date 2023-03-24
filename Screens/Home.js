@@ -1,17 +1,15 @@
-import React, {useState} from "react";
+import React, {useState,useEffect} from "react";
 import { StyleSheet,View,  Button, Text, TouchableOpacity, Alert, TextInput, ScrollView, BackHandler,Pressable,Image } from "react-native";
 import { moderateScale,horizontalScale, verticalScale } from "./Dimension";
 
-import { FloatingAction } from "react-native-floating-action";
-import DocumentPicker from 'react-native-document-picker';
-import  Map from './Map'
-
-import ImageCardHome from './ImageCardHome'
-import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { DrawerActions } from '@react-navigation/native';
-import { SideMenu } from "./HeaderComponent";
-
+import firebase from "firebase/compat";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import ChooseRoute from './ChooseRoute'
+import Temp from "./Temp";
+import Map from './Map'
+import { db,auth } from "./Firbase";
+import { showAlert, showSucess } from "./Helper/Helper";
+import Login from "./Login";
 
 const Home=({navigation})=>{
 
@@ -43,84 +41,141 @@ const Home=({navigation})=>{
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, [])
   );
-  //Adding floating button to home screen
-
-  const actions = [
-    {
-      text: "Upload KML File",
-      icon: require("../assets/KML.png"),
-      name: "KML file",
-      position: 2
-    },
-    {
-      text: "Upload KMZ file",
-      icon: require("../assets/KMZ.png"),
-      name: "KMZ file",
-      position: 1
-    },
+useEffect(() => {
+  navigation.setOptions({
+    headerRight: () => (
+      <TouchableOpacity onPress={logout}>
+        <Image source={require('../assets/LogoutButton.png')} style={{width:30,height:30,marginRight:5}}></Image>
+      </TouchableOpacity>
+    ),
+  });
+}, [])
     
-  ];
-
-  //Files array
-
-  const [file, setFile] = useState(null);
-
-
-  //Method to upload document from device
-  const pickFile = async () => {
-    try {
-      const result = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
-      });
-      setFilePath(result.uri);
-      // Do something with the selected file, e.g. parse it as a KML/KMZ file
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        // User cancelled the picker
-      } else {
-        console.log(err);
+const handlelogout=()=>{
+  Alert.alert(
+    'Done Route',
+    'Are you sure you want  to logout?',
+    [
+      {
+        text: 'Cancel',
+        onPress: () => null,
+        style: 'cancel'
+      },
+      {
+        text: 'Logout',
+        onPress: () =>logout()
       }
-    }
-  };
-  
+    ],
+    { cancelable: false,
+      titleStyle: { color: 'red' },
+      messageStyle: { color: 'blue' }, }
+  );
+  return true;
+};
+
+const logout = () => {
  
-    return(
+  
+  auth
+    .signOut()
+    .then(() => showSucess("Successfully logout"));
+    navigation.replace("Login")
+}
+    const MoveScreen=()=>{
+      NavigationContainer.navigate("ChooseRoute")
+    }
+
+// }
+ const NavigationContainer=useNavigation();
+const checkDocExists=()=>{
+ const email=firebase.auth().currentUser.email
+
+const fileName = `${email}.kml`; 
+const storageRef = firebase.storage().ref().child(fileName);
+storageRef.getDownloadURL()
+  .then((url) => {
+    NavigationContainer.navigate("Map")
+    
+  })
+  .catch((error) => {
+    Alert.alert("You have no any route to covered")
+  });
+
+    };
+
+        return(
       
-        <View style={styles.MapContainer}>
-   
-       <ImageCardHome />
-       <View style={{flex:1,flexDirection:'row',padding:moderateScale(10)}}>
-        <Image source={require('../assets/icons8-pin-location-64.png')} style={{width:50}}/><Text style={{marginiTop:5,fontSize:20}}>Target your destination</Text>
-        <TouchableOpacity onPress={()=>navigation.navigate(Map)}>
-         <Image source={require('../assets/RightButton.png')}></Image>
-         </TouchableOpacity>
-            
-               <FloatingAction
-                 name='ion|plus'
-                 size={25}      
-                 color='#002F46'  
-  />
-     </View>
+        <View style={styles.ViewContainer}>
+
+<View style={styles.CardContainer}>
+  <Image source={require('../assets/HomeScreen.png')}    style={styles.ImageContainer}></Image>
+  <TouchableOpacity
+        style={[
+          styles.TouchContainer,
+          
+        ]}
+       onPress={checkDocExists}
+      >
+
+        <Text style={{ fontSize: 20,borderColor:'#002F46', alignItems: 'center',marginLeft:100,marginRight:100, color: 'white', }}>         Route         </Text>  
+      </TouchableOpacity>
+      <TouchableOpacity
+      onPress={MoveScreen}
+        style={[
+          styles.TouchContainer2,
+         
+        ]}
        
+       
+      >
+         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,marginBottom:2}}>   Create Route  </Text>  
+      </TouchableOpacity>
+                
+</View>
+
+    <View style={styles.ImageBackgroundcontainer}>
+    <Temp />    
+      </View>     
+         
       
         </View>
       
     )
 };
 
+
 const styles=StyleSheet.create({
 ViewContainer:{
-paddingBottom:100,
+flexDirection:'column',
 flex:1,
-justifyContent:'center',
-alignItems:'center',
+
+},
+
+ImageBackgroundcontainer: {
+
+paddingTop:10,
+flex: 1,
+flexDirection:'column',
+padding:20,
+
+elevation:5,
+
+
+
+
+
+
+
+
+
 },
 MapContainer:{
     
         flex: 1,
       
         flexDirection:'column',
-
+  width:500,
+  height:400
 
        
         
@@ -128,10 +183,44 @@ MapContainer:{
         
       },
 
+      ImageContainer:{
+        marginBottom:20,
+        width:300,
+        height:200,
+        marginRight:20
+      },
+
+
       CardContainer:{
         flex: 1, height: '100%', width: '100%', borderRadius: 10, 
+        marginTop:60,
+        alignItems:'center',
+        justifyContent:'center'
+      },
+      TouchContainer:{
+        backgroundColor:'#002F46',
         
+        elevation:10,
+        borderWidth:2,
+          marginBottom:20, 
+        borderRadius:15,
+        alignItems:'center',
+        height:70,
+        justifyContent:'center',
+        marginTop:16,
+        borderColor:'white',
+      },  TouchContainer2:{
+        backgroundColor:'#002F46',
         
+        elevation:10,
+        borderWidth:2,
+          marginBottom:100, 
+        borderRadius:15,
+        alignItems:'center',
+        height:70,
+        justifyContent:'center',
+        marginTop:16,
+        borderColor:'white',
       },
 });
 

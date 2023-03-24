@@ -10,7 +10,7 @@ import { moderateScale } from './Dimension';
 export default function CalculateCard({distance}){
     return(
       <View  color='#1F6478' style={styles.Cardcontainer}>
-  <Text style={{fontWeight:'700',fontSize:15,}}>{distance} /  kilometer remaining</Text>
+  <Text style={{fontWeight:'700',fontSize:15,}}>{distance} /kilometer's covered</Text>
       </View>
     )
 }

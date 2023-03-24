@@ -10,7 +10,13 @@ showMessage({
     icon:'danger'
 })
 }
-
+const showAlert=(message)=>{
+  showMessage({
+    message,
+    type:"alert",
+    icon:'alert'
+})
+}
 const showSucess=(message)=>{
     showMessage({
         message,
@@ -52,4 +58,5 @@ export const locationPermission=()=>new Promise(async(resolve,reject)=>{
 export{
 showError,
 showSucess,
+showAlert
 }

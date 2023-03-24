@@ -1,6 +1,6 @@
-import React, {useEffect} from "react";
+import React from "react";
 import { StyleSheet, View ,Alert,Button, ScrollView,TouchableOpacity,Text} from "react-native";
-import MapView from "react-native-maps";
+
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { horizontalScale, moderateScale, verticalScale } from "./Dimension";
 

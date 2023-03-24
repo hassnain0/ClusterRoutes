@@ -1,18 +1,27 @@
 import React from 'react-native'
 import {StyleSheet,View, Button,Text,TouchableOpacity,Image,} from 'react-native'
-import Temp from './Temp';
-import MapView, { Marker } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
-import { GOOGLE_MAPS_APIKEY } from './GoogleAPI';
-import MapViewDirections from 'react-native-maps-directions';
 import { moderateScale } from './Dimension';
 
-export default function ImageBottomCard({navigation}){
+
+import {MapView,PROVIDER_GOOGLE} from 'react-native-maps';
+
+const  ImageCardHome=()=>{
+
+
     return(
-      <View  color='#1F6478' style={styles.Cardcontainer}>
-    <Image source={require('../assets/Image.jpg')} style={{width:340,height:330,borderRadius:15}}></Image>
-      </View>
+     <View style={styles.Cardcontainer}>
+      <MapView
+    initialRegion={{
+      latitude: 37.78825,
+      longitude: -122.4324,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    }}
+  />
+       
+       </View>
     )
+
 }
 
 const styles=StyleSheet.create({
@@ -47,3 +56,4 @@ ViewContainer:{
                 width:100,
               }
 });
+export default ImageCardHome;

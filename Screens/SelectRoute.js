@@ -5,12 +5,12 @@ import { FloatingAction } from 'react-native-floating-action';
 import { useNavigation } from "@react-navigation/native";
 import ViewMap from './ViewMap'
 import { showSucess,showError } from './Helper/Helper';
- import AnotherViewMapAdmin from './AnotherViewMapAdmin'
-import TrackerFile from "./TrackerFile";
 
+
+import * as MailComposer from 'expo-mail-composer';
 import {firebase} from './Firbase'
-import AdminShowRoute from "./AdminShowRoute";
 
+import * as FileSystem from 'expo-file-system';
 
 
 const SelectRoute=({route})=>{
@@ -22,7 +22,7 @@ const SelectRoute=({route})=>{
         type: [
         
           'application/vnd.google-earth.kml+xml',
-          'application/vnd.google-earth.kmz',
+         
         ],
       });
       if (result.type === 'success') {
@@ -31,9 +31,9 @@ const SelectRoute=({route})=>{
       
         uploadFile(source);
        
-        showSucess('KML/KMZ file upload sucessfully')
-        NavigationContainer.navigate('AnotherAdminViewMap',{
-          email:route.params}) 
+       
+    // NavigationContainer.navigate('AnotherAdminViewMap',{
+        //   email:route.params}) 
       }
     } catch (err) {
       console.log(err);
@@ -50,35 +50,40 @@ const SelectRoute=({route})=>{
    
   ];
 
-  
   const handleActionSelect = () => {
     
     handleFilePick();
-       
+          
 };
 
 
-  const NavigationContainer=useNavigation();
+ 
 
+  // const handleView=()=>{
+  //   NavigationContainer.navigate('AnotherAdminViewMap',{
 
-  const [state,setState]=useState({
+  //     email:route.params}) 
+  //  }
+  // const [state,setState]=useState({
     
-    droplocationCords:{},
-    pickupCords:{},
+  //   droplocationCords:{},
+  //   pickupCords:{},
       
-    })
-    const uploadFile = async (source) => {
+  //   })
+    const uploadFile = async (source) => { 
+     
       const response = await fetch(source.uri);
       const blob = await response.blob();
       const filename = source.uri.substring(source.uri.lastIndexOf('/') + 1);
       const fileExtension = filename.split('.').pop();
       const email=route.params.email
+      
       const newFilename = `${email}.${fileExtension}`;
       const ref = firebase.storage().ref().child(newFilename);
       const fileSnapshot = await ref.getMetadata().catch(() => null);
       if (fileSnapshot) {
         // The file exists in Firebase Storage, so update it
-       
+       console.log("blob",fileSnapshot)
         await ref.put(blob);
         
         console.log(`Updated KML file in Firebase Storage at ${ref.fullPath}`);
@@ -90,74 +95,120 @@ const SelectRoute=({route})=>{
         console.log(`Uploaded KML file to Firebase Storage at ${ref.fullPath}`);
       }
     
-       
+       handleDone();
     
     };
-
     const createKmlFile = async (coordinates) => {
       try {
         // Convert coordinates to KML format
-        const kmlString = `
-          <?xml version="1.0" encoding="UTF-8"?>
-          <kml xmlns="http://earth.google.com/kml/2.1">
+        const placemarks = coordinates.map((coord, index) => ({
+          name: `Point ${index+1}`,
+          styleUrl: '#icon-1899-0288D1-nodesc',
+          Point: {
+            coordinates: `${coord.longitude},${coord.latitude},0`
+          }
+        }));
+        
+        const kmlString = `<?xml version="1.0" encoding="UTF-8"?>
+          <kml xmlns="http://www.opengis.net/kml/2.2">
             <Document>
-              <name>Route.kml</name>
+              <name>Untitled layer</name>
+              <Style id="icon-1899-0288D1-nodesc-normal">
+                <IconStyle>
+                  <color>ffd18802</color>
+                  <scale>1</scale>
+                  <Icon>
+                    <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+                  </Icon>
+                  <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+                </IconStyle>
+                <LabelStyle>
+                  <scale>0</scale>
+                </LabelStyle>
+                <BalloonStyle>
+                  <text><![CDATA[<h3>$[name]</h3>]]></text>
+                </BalloonStyle>
+              </Style>
+              <Style id="icon-1899-0288D1-nodesc-highlight">
+                <IconStyle>
+                  <color>ffd18802</color>
+                  <scale>1</scale>
+                  <Icon>
+                    <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+                  </Icon>
+                  <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+                </IconStyle>
+                <LabelStyle>
+                  <scale>1</scale>
+                </LabelStyle>
+                <BalloonStyle>
+                  <text><![CDATA[<h3>$[name]</h3>]]></text>
+                </BalloonStyle>
+              </Style>
+              <StyleMap id="icon-1899-0288D1-nodesc">
+                <Pair>
+                  <key>normal</key>
+                  <styleUrl>#icon-1899-0288D1-nodesc-normal</styleUrl>
+                </Pair>
+                <Pair>
+                  <key>highlight</key>
+                  <styleUrl>#icon-1899-0288D1-nodesc-highlight</styleUrl>
+                </Pair>
+              </StyleMap>
+              ${placemarks.map(placemark => `
               <Placemark>
-                <LineString>
-                  <coordinates>
-                    ${coordinates.map(coord => `${coord.longitude},${coord.latitude}`).join(' ')}
-                  </coordinates>
-                </LineString>
+                <name>${placemark.name}</name>
+                <styleUrl>${placemark.styleUrl}</styleUrl>
+                <Point>
+                  <coordinates>${placemark.Point.coordinates}</coordinates>
+                </Point>
               </Placemark>
-            </Document>
-          </kml>
-        `;
-    
+              `).join('')}
+             </Document>
+          </kml>`;
+        
         // Create a file in the app's document directory
-        // const fileName = 'Route.kml';
-        // const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+        
         // await FileSystem.writeAsStringAsync(fileUri, kmlString, { encoding: FileSystem.EncodingType.UTF8 });
-    
+         console.log( "kml with out strniog ",kmlString)
         // console.log(`Created KML file at ${fileUri}`);
         return kmlString;
       } catch (error) {
         console.error(error);
       }
     };
-
     
-    const {droplocationCords,pickupCords}=state
+    
+    // const {droplocationCords,pickupCords}=state
 
- const AddDataToFireStore = async () => {
-  const email=route.params.email;
-  const fileName =`${email}.kml`; 
-  const storageRef = firebase.storage().ref().child(fileName)
+//  const AddDataToFireStore = async () => {
+//   const email=route.params.email;
+//   const fileName =`${email}.kml`; 
+//   const storageRef = firebase.storage().ref().child(fileName)
 
-  // Check if the file exists in Firebase Storage
+//   // Check if the file exists in Firebase Storage
   
 
-  const fileSnapshot = await storageRef.getMetadata().catch(() => null);
+//   const fileSnapshot = await storageRef.getMetadata().catch(() => null);
+ 
   
-  if (fileSnapshot) {
-    // The file exists in Firebase Storage, so update it
-    const cordinates=[pickupCords,droplocationCords];
-   
-    const kmlString = createKmlFile(cordinates) // the KML string from your code snippet
-    const kmlBlob = new Blob([kmlString], { type: 'application/vnd.google-earth.kml+xml' });
-    await storageRef.put(kmlBlob);
+//   const kmlString = createKmlFile(cordinates);
+//   const kmlBlob = new Blob([kmlString], { type: 'application/vnd.google-earth.kml+xml' });
+  
+//   if (fileSnapshot) {
+//     // The file exists in Firebase Storage, so update it
+//     await storageRef.updateMetadata({ contentType: 'application/vnd.google-earth.kml+xml' });
+//     await storageRef.put(kmlBlob);
+//     console.log(`Updated KML file in Firebase Storage  at ${storageRef.fullPath}`);
+//     // sendEmail();
     
-    console.log(`Updated KML file in Firebase Storage at ${storageRef.fullPath}`);
-  } else {
-    // The file doesn't exist in Fire
-    const cordinates=[pickupCords,droplocationCords];
-    const kmlString = createKmlFile(cordinates)// the KML string from your code snippet
-    const kmlBlob = new Blob([kmlString], { type: 'application/vnd.google-earth.kml+xml' });
-    await storageRef.put(kmlBlob);
-    
-    console.log(`Uploaded KML file to Firebase Storage at ${storageRef.fullPath}`);
-  }
+//   } else {
+//     // The file doesn't exist in Firebase Storage, so create a new one
+//     await storageRef.put(kmlBlob);
+//     console.log(`Uploaded KML file to Firebase Storage at ${storageRef.fullPath}`);
+//   }
 
- }
+//  }
  
   
 //   const getLiveLocation =async()=>{
@@ -183,60 +234,27 @@ const SelectRoute=({route})=>{
 //   }
   
     const handleDone=()=>{
-   if(Object.keys(pickupCords).length==0){
-    showError("     Please enter your live  location")    
-  }
-      if(Object.keys(droplocationCords).length==0){
-        showError("     Please enter your  current location")
-      }
-
-   else{
-
-    AddDataToFireStore();
+  
+    const email=route.params.email;
+    MailComposer.composeAsync({
+      recipients: [email],
+      subject: 'Cluster Routes',
+      body: 'New route is waiting for you \n Note: Please send back email of completion on same email when you done \n Thankyou Regards TNSS GLOBAL ',
+    });
     showSucess(" Route Assigned sucessfully !")
-    NavigationContainer.navigate('AnotherAdminViewMap',{
-      email:route.params}) }
-    }
+  
+   
 
-                //Variables
+  }              //Variables
    
 
 //Methods to call pickdrop location cords
-const fetchPickupCords=(lat,lng)=>{
-  try{
-   setState({
-     ...state,pickupCords:{
-     latitude:lat,
-     longitude:lng,
-   
-   },
 
- })
- }
- catch(error){
-   console.log(error)
- }
- }
+ 
  
 
 
-            //Methods to call latitude and longitude of target location
-      const fetchDestinationCode=(lat,lng)=>{
-       try{
-        setState({
-          ...state,droplocationCords:{
-          latitude:lat,
-          longitude:lng,
-        
-        },
-})
-      }
-      catch(error){
-        console.log(error)
-      }
-      }
-   
-      console.log(" drop location cord  from user",droplocationCords);
+            
      
     return(
         <View style={styles.ViewContainer}>
@@ -245,14 +263,8 @@ const fetchPickupCords=(lat,lng)=>{
           style={{backgroundColor:'white',flex:1,padding:24}}>
 
 
-<TrackerFile placeholderText="Select starting location"  fetchAddress={fetchPickupCords}/>
-         
-          <TrackerFile placeholderText="Select  desitnation location"  fetchAddress={fetchDestinationCode}/>
        
-         
-         <TouchableOpacity style={styles.submitButton} onPress={handleDone} >
-         <Text style={styles.submitButtonText}>Assign</Text>
-          </TouchableOpacity>   
+    
           </ScrollView>  
           <FloatingAction
      

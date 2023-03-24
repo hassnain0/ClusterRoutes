@@ -1,22 +1,23 @@
-import React, {useState} from "react";
+import React, {useState,useEffect} from "react";
 import { View,Alert,Text,TextInput,Button,TouchableOpacity, StyleSheet,KeyboardAvoidingView,Image} from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { horizontalScale,verticalScale,moderateScale } from "../ClusterRoutes/Screens/Dimension";
+import { horizontalScale,verticalScale,moderateScale } from "./Screens/Dimension";
 import { db, firebaseConfig ,auth} from "./Screens/Firbase";
-// import { initializeApp } from "@firebase/app";
-// import {getAuth} from '@firebase/auth'
+import NetInfo from '@react-native-community/netinfo';
 import ForgotScreen from './Screens/ForgotSceen'
-import { Keyboard } from 'react-native';
-import Home from "./Screens/Home";
+import Home from './Screens/Home';
 import SignUp from "./Screens/SignUp";
 
-import { signInWithEmailAndPassword } from "@firebase/auth";
+import { signInWithEmailAndPassword,onAuthStateChanged,getAuth } from "@firebase/auth";
 import AdminHomeScreen from "./Screens/AdminHomeScreen";
-import TempMap from "./Screens/TempMap";
+
 
 import firebase from "firebase/compat";
 import { showError, showSucess } from "./Screens/Helper/Helper";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { showMessage } from "react-native-flash-message";
+import Map from "./Screens/Map";
+import SelectRoute from "./Screens/SelectRoute";
 const Card=({navigation})=>{
 
   const [keyboardShown, setKeyboardShown] = useState(false);
@@ -25,9 +26,26 @@ const Card=({navigation})=>{
   
   const [selectedValue, setSelectedValue] = useState();
   // const app=initializeApp(firebaseConfig);
+  const [isConnected, setIsConnected] = useState(true);
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+   
+   
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
-  
-   //Method to move to admin or user home screen
+  const NavigationContainer=useNavigation();
+  const MoveScreen=()=>{
+NavigationContainer.navigate("ForgotScreen")
+  }
+  const MoveSignUP=()=>{
+    NavigationContainer.navigate("SignUp")
+   }
+  //Method to move to admin or user home screen
   const handlePickerValueChange = (itemValue) => {
     setSelectedValue(itemValue);
   };
@@ -42,21 +60,44 @@ const Card=({navigation})=>{
    
       const doc = await db.collection("Usernmaes").doc(myEmail).get();
       if (doc.exists) {
-        console.log("Hello")
+     
         const data = doc.data();
 
         const Data=data.Value;
-
-        console.log("Data Value",Data)
-        if (Data===selectedValue) { 
-          await signInWithEmailAndPassword(auth, myEmail, myPassword).catch(error=>{
-            showError(error)
-           
+  
+         if (Data===selectedValue) { 
+          
+         
+           await  signInWithEmailAndPassword(auth,myEmail, myPassword).then(() => {
+            if (!isConnected) {
+             showError("Please connect your internet connection")              
+            }  
+            else
+            {
+            navigation.navigate(Home)
+            }
+          }).catch(error=>{
+            if(error.code=='auth/too-many-request'){
+              Alert.alert('Too many wrong attempts ! Account Disabled please reset your password')
+            }
+            if(error.code=='auth/wrong-password'){
+              Alert.alert('Wrong Password')
+            }
+            if(error.code=='auth/user-not-found')
+            {
+              showError("User not found")
+            }
+            
+            else{
+              console.log(error)
+            }
           })
-          navigation.navigate(Home);
+         
+         
 
          
-        }
+      
+      }
         else
 
         {showError("Please select your identity")}
@@ -66,13 +107,27 @@ const Card=({navigation})=>{
           
         }
         else if(selectedValue=='Admin')
-        { await signInWithEmailAndPassword(auth, myEmail, myPassword).catch(error=>{
-          showError(error)
-         
-        
-           
-      } );
-      navigation.navigate(AdminHomeScreen);
+        { await  signInWithEmailAndPassword(auth,myEmail, myPassword).then(() => {
+            
+          if (!isConnected) {
+            showError("Please connect your internet connection")
+             
+           }  
+           else
+           {
+           navigation.navigate(AdminHomeScreen)
+           }
+          
+        }).catch(error=>{
+          if(error.code=='auth/too-many-request'){
+            Alert.alert('Too many wrong attempts ! Account Disabled please reset your password')
+          }
+          if(error.code=='auth/wrong-password'){
+            Alert.alert('Wrong Password')
+          }
+          
+        })
+       
   
 
     }
@@ -123,11 +178,11 @@ const Card=({navigation})=>{
 <TouchableOpacity style={styles.TouchContainer} onPress={handleLogin}>
     <Text style={{fontSize:20,alignItems:'center',color:'white',width:280,height:40,paddingTop:5}}>                       Log in</Text>   
     </TouchableOpacity>
-    <TouchableOpacity onPress={()=>navigation.navigate(ForgotScreen)}>
+    <TouchableOpacity onPress={MoveScreen}>
    <Text style={{color:'#BCBCBC',fontSize:20,paddingTop:10}}>Forgot   Pasword?</Text>
    
    </TouchableOpacity>
-   <TouchableOpacity  style={styles.submitButton} onPress={()=>navigation.navigate(SignUp)}>
+   <TouchableOpacity  style={styles.submitButton} onPress={MoveSignUP}>
    <Text  style={{color:'#BCBCBC',fontSize:15}}>Signup!</Text>
    </TouchableOpacity>
     </KeyboardAvoidingView>

@@ -1,11 +1,9 @@
-import React, {useState} from "react";
-import { View,Alert,Text,TextInput,Button,TouchableOpacity, StyleSheet,KeyboardAvoidingView,Image} from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import React from "react";
+import {  StyleSheet} from "react-native";
+
 import { horizontalScale,verticalScale,moderateScale } from "./Dimension";
 import MapView, { Marker } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
-import MapViewDirections from 'react-native-maps-directions';
-import { GOOGLE_MAPS_APIKEY } from './GoogleAPI';
+
 // import { initializeApp } from "@firebase/app";
 // import {getAuth} from '@firebase/auth'
 
@@ -33,39 +31,12 @@ const Temp=({navigation})=>{
     }
     
   }
+  
+  showsUserLocation={true}
+  shouldRasterizeIOS={true}
+  showsMyLocationButton={true}
+  
   >
-     <Marker
-        coordinate={{  latitude:31.582045,
-      longitude:74.329376,
-      latitudeDelta:1.6164,
-      longitudeDelta:18.0269,}}
-        title="Initial location"
-        pinColor="red"
-      />
-      <Marker
-     
-        coordinate={{  latitude: 14.343,
-          longitude: 1600,
-          latitudeDelta: 0.002,
-          longitudeDelta: 0.0002,}}
-        title="Target Location"
-        pinColor="red"
-      />
- 
-   
-      <MapViewDirections
-        origin={{latitude:25.416868,
-            longitude:68.274307,
-            latitudeDelta:1.6164,
-            longitudeDelta:18.0269}}
-        destination={{ latitude: 14.343,
-          longitude: 1600,
-          latitudeDelta: 0.002,
-          longitudeDelta: 0.0002,}}
-        apikey={GOOGLE_MAPS_APIKEY}
-        strokeWidth={3}
-        strokeColor="green"
-      />
     
   </MapView>   
 

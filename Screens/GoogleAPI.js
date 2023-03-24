@@ -1,2 +1,2 @@
 
-export const GOOGLE_MAPS_APIKEY='AIzaSyAnAywjku9xixy7lI9v4zh26a43-NVgoHA';
+export const GOOGLE_MAPS_APIKEY='AIzaSyCtBaJebnNCC1HzVMGv_B7C2H0sKO4txuo';

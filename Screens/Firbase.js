@@ -18,9 +18,11 @@ import 'firebase/compat/firestore';
 
  const app=initializeApp(firebaseConfig)
     firebase.initializeApp(firebaseConfig)
+   
    const db=firebase.firestore()
 
    const auth=getAuth(app);
+
    export  {db,auth,firebaseConfig,firebase};   
 
 

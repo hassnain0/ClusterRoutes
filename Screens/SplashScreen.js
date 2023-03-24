@@ -24,6 +24,8 @@ const  SplashScreen = ({ navigation }) => {
      
     </View>
   );
+
+
 };
 
 const styles = StyleSheet.create({
@@ -34,8 +36,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   image: {
-    width: 300,
-    height: 300,
+    width: 500,
+    height: 500,
   },
 });
 

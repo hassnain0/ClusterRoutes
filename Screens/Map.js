@@ -1,423 +1,595 @@
-import React,{useState,useRef,useEffect} from 'react'
-import {StyleSheet,View, Text,TextInput,Button, ScrollView, Image,TouchableOpacity, Dimensions, Platform} from 'react-native';
-import MapView, { Marker,PROVIDER_GOOGLE ,AnimatedRegion} from 'react-native-maps';
-// import Geolocation from '@react-native-community/geolocation';
-import MapViewDirections from 'react-native-maps-directions';
-import {db } from './Firbase'
-import * as Location from 'expo-location';
-import { GOOGLE_MAPS_APIKEY } from './GoogleAPI';
-import firebase from "firebase/compat";
-
+import React, { useState, useEffect ,useRef} from 'react';
+import { StyleSheet, View,Dimensions,TouchableOpacity,Text ,Alert} from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE,ActivityIndicator,Polyline,AnimatedRegion,} from 'react-native-maps';
+import { db, firebase } from './Firbase';
+import * as FileSystem from 'expo-file-system';
+import xml2js, { parseString } from 'xml2js';
+import * as Location from 'expo-location'
 import { moderateScale } from './Dimension';
-
-import { useIsFocused } from '@react-navigation/native';
-
 import ImagePath from './ImagePath';
-
+import { locationPermission, showError, showSucess } from './Helper/Helper';
 import CalculateCard from './CalculateCard';
+import { useNavigation } from '@react-navigation/native';
+import Login from './Login';
+const Map= ({navigation}) => {
+  // const [markers, setMarkers] = useState([]);
+  const [isTracking, setIsTracking] = useState(false);  
+  const mapRef = useRef(null);
+  const [Distance,setDistance]=useState([0]);
+  const markerRef = useRef(null);
+  //
+   
+  const [livecords, setLiveCords] = useState([
+   
+  ]);
 
-import StartRoute from './StartRoute';
-
-
-
-
-     const Map=({navigation}) =>{
-
-      const mapRef= useRef()
-
-      //Marker Ref
-      const markerRef=useRef()
-
-
-      
-      const [state,setState]=useState({
-      
-          
-     pickDropCords:{
-      latitude: 31.582045,
-      longitude: 74.329376,
-      latitudeDelta:LATITUDE_DELTA,
-      longitudeDelta:LONGITUDE_DELTA,
-     },
-
-        currlocation:{
-        latitude: 31.582045,
-        longitude: 74.329376,
-        latitudeDelta:LATITUDE_DELTA,
-        longitudeDelta:LONGITUDE_DELTA,
-         
-    },
-       endinglocation:{
-    latitude:0,
-    longitude:0
-       },
-       isLoading:false,
-       cordinates:new AnimatedRegion({
-        latitude: 31.582045,
-        longitude: 74.329376,
-        latitudeDelta:LATITUDE_DELTA,
-        longitudeDelta:LONGITUDE_DELTA
-       },
-
-       ),
+  
+  
+  const [region, setRegion] = useState({
        
-      //  distance:0,
-      
-    }
-       )
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+
     
+  useEffect(() => {
+    getKmlFile();
+      AddPolycordinates();
     
-    
-    const {currlocation,endinglocation,pickDropCords,isLoading,cordinates,distance}=state
-     
-    const isFocused = useIsFocused();
- 
-    
-    useEffect(() => {
-   
-      fetchValuesiofEngineer();
-      getMyLocation();
-
-      fetchValuesiofEngineer();
-  const unsubscribe = navigation.addListener('focus', () => {
-    fetchValuesiofEngineer();
-    getMyLocation();
-   
-      });
-      return unsubscribe;
-    }, [isFocused]);
-
-   
-    //Time interval of current location
-    useEffect(()=>{
-      const interval=setInterval(()=>{
-        getMyLocation();
-      
-      },6000);
-
-      return ()=>clearInterval(interval)
-    })
-
- 
-
-
-      // Current location
-      const getMyLocation=async()=>{
-    
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          return;
-        }
-  
-        let location = await Location.getCurrentPositionAsync({});
-
-     const latitude=location.coords.latitude
-     const longitude=location.coords.longitude
-            
-     storeData(latitude,longitude)
-     Get();
-      }
-
-
-const storeData=(lat,long)=>{
-  try{
-
-  const usersCollection = db.collection('LiveLocation')
-  const currentUser = firebase.auth().currentUser;
-
-
-
-// Add a new document to the collection with the user's data
-usersCollection.doc(currentUser.uid).set({
-     
-email: currentUser.email,
-latitude:lat,
-longitude:long,
-
-
-})
-console.log('Live location added to map')
-
-  }
-  catch(error){
-    console.log(error)
-  } 
-} 
-
-      
- 
-
- const animate=(latitude,longitude)=>{
- const newCoordinate={latitude,longitude}
-  if(markerRef.current){
-
-    markerRef.current.animateMarkerToCoordinate(newCoordinate,7000);
-  
- }
- 
- }
-
-
-
-
-      //Web View
-
-      
-
-      const RouteDistance=(distance1)=>{
-        setState(state=>({...state,distance:distance1}))
-      }
-     
-      
-
-        //Getting live location from firebase
-        const Get=async()=>{
-          try{
-
-
-            const usersCollection=db.collection('LiveLocation')
-          
-            const currentUserEmail=firebase.auth().currentUser.email;
-            // Query the collection for the document with the matching email
-            const userDoc = await usersCollection.where('email', '==',currentUserEmail).get();
-            
-            // Retrieve the document data
-            if (!userDoc.empty) {
-                 
-                userDoc.forEach((doc) => {
-                const data = doc.data();
-                console.log("Fetching live location of user",data)
-                 const lat=data.latitude;
-                 const longitude=data.longitude;
-                animate(lat,longitude)
-                
-                setState({...state,
-                
-                currlocation:{ 
-                  latitude:data.latitude,
-                  longitude: data.longitude,
-                   },
-                   
-                   cordinates:new AnimatedRegion({
-                    latitude: data.latitude,
-                    longitude: data.longitude,
-                    latitudeDelta:LATITUDE_DELTA,
-                    longitudeDelta:LONGITUDE_DELTA
-                    
-                   },
-
-                   console.log("Called")
-            
-                   ),  
-
-                
-              })
-              });
-             
-            } else {
-              console.log('No matching document!');
-            }
-              }
-              catch(error){console.log(error)}
-                         
-            }
-
-const handleNavigation=()=>{
-  const currentuser=firebase.auth().currentUser.email;
-  console.log("Props",currentuser)
-navigation.navigate('StartRoute',{
-  email:currentuser,
-})
-}
-
-  
-
-
-const fetchValuesiofEngineer=async()=>{
-  try{
-
-    const usersCollection = db.collection('KMLFile');
-   const currentUser=firebase.auth().currentUser.email;
-    
-    const userRef = usersCollection.doc(currentUser);
-    
-// Get the document data
-userRef.get().then((doc) => {
-  if (doc.exists) {
-
-    console.log(doc)
-    // The document exists, so you can access its data
-    const data = doc.data();
-    const file=data.KMLFILE
-    const coordinatesString = file.match(/<coordinates>(.*?)<\/coordinates>/s)[1];
-    const coordinatePairs = coordinatesString.trim().split(/\s+/).map(coord => coord.split(',').reverse().map(parseFloat));
- 
-    
-     const pickupCords=coordinatePairs[0]
-     const droplocationCords=coordinatePairs[1]
-     setState({...state,pickDropCords:{latitude:pickupCords[0],
-     longitude:pickupCords[1]},
-
-
-endinglocation:{latitude:droplocationCords[0],
-longitude:droplocationCords[1]}
-})
-  } else {
-    // The document doesn't exist
-    console.log("No such document !");
-  }
-}).catch((error) => {
-  console.log("Error getting document:", error);
-});
-      }
-      catch(error){}
-    }
-
-
- 
-
- 
- 
- 
- 
-//Dimension call
-const screen=Dimensions.get('window')
+  }, []);
+  const screen=Dimensions.get('window')
 const ASPECT_RATIO=screen.width/screen.height;
 const LATITUDE_DELTA=0.9222;
 const LONGITUDE_DELTA=LATITUDE_DELTA*ASPECT_RATIO;
 
-      //Methods to call latitude and longitude of current location
-     
-      return (
-<View style={styles.ViewContainer}>
-    <View style={{flex:1}}>
-    
-
-      <MapView
-        zoomEnabled={true}
-        zoomControlEnabled={true}
-        showsUserLocation={true}
-
-        mapType='satellite'
-                // mapType='satellite'
-        showMyLocationButton={true}
-      provider={PROVIDER_GOOGLE}
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        initialRegion={{
-          ...pickDropCords,
-          latitudeDelta:LATITUDE_DELTA,
-          longitudeDelta:LONGITUDE_DELTA,
-        }}
-        >
+ const [state,setState]=useState({
+      
+          
+         
+             currlocation:{
+             latitude: 33.6844,
+             longitude: 73.0479,
+             
+              
+         },  
          
             
-    
-
-
-
-
-{pickDropCords && Object.keys(pickDropCords).length > 0 && (
-  <Marker
-  draggable={true}
-     
-    title="Starting location of route"
-    coordinate={pickDropCords}
-    image={ImagePath.StartingLocation} 
-  />
-)}
-
-
-{endinglocation && Object.keys(endinglocation).length > 0 && (
-  <Marker
-    title="Destination location"
-    coordinate={endinglocation}
-  
-   pinColor="red" 
-         
-  />
-)}
-
-
-       
-    
-{endinglocation && Object.keys(endinglocation).length>0&& (<MapViewDirections
-            origin={pickDropCords}
-            destination={endinglocation}
-            apikey={GOOGLE_MAPS_APIKEY}
-            strokeColor={"blue"}
-            strokeWidth={6}
-            lineCap="round"
-            lineDashPattern={[0]}
-            optimizeWaypoints={true}
-            onReady={result => {
-                console.log(" Distance" ,result.distance)
-              RouteDistance(result.distance);
-
-                mapRef.current.fitToCoordinates(result.coordinates, {
-                  // edgePadding: { top: 10, right: 10, bottom: 10, left: 10, },
-                  // animated:true,
-                  
-                 
-                })
-           
-               
-           }
-          
- 
-       
-          }
-     
- />
-       )
-
-}
-
-      </MapView>
-      <View style={{
-        position:'absolute',
-        bottom:0,
-        right:0,
-      }} 
-
-      
-      >
- <View  style={{ position:'absolute',
-        bottom:0,
-        right:60,}}>
-   <CalculateCard  distance={distance} />
-   </View>
-    </View>
-      </View>
-<View style={styles.BottomCard}>
-    
-    <TouchableOpacity style={styles.TouchContainer} onPress={handleNavigation}>
-    <Text style={{fontSize:20,alignItems:'center', marginTop:1,color:'white'}}>Start</Text>   
-    </TouchableOpacity>
-</View>
-      </View>
+    }    )
+  const {currlocation}=state               
   
    
-      
-  );
-    }
+  const [coordinates,setCoordinates]=useState([]);
 
-const styles=StyleSheet.create({
+
+        useEffect(() => {
+          if (mapRef.current && coordinates.length > 0) {
+            mapRef.current.fitToCoordinates(coordinates, {
+              edgePadding: { top: 20, right: 20, bottom: 20, left: 20 },
+              animated: true,
+            });
+          }
+        }, [mapRef, coordinates]);
+
+        const handleDone=()=>{
+          
+          Alert.alert(
+            'Done Route',
+            'Are you sure you want  to done?',
+            [
+              {
+                text: 'Cancel',
+                onPress: () => null,
+                style: 'cancel'
+              },
+              {
+                text: 'Done',
+                onPress: () =>handleDelete()
+              }
+            ],
+            { cancelable: false }
+          );
+          return true;
+        };
+             const NavigationContainer=useNavigation();     
+ const handleDelete=async()=>{
+   const email=firebase.auth().currentUser.email;
+  const fileName =`${email}.kml`; 
+  const storageRef = firebase.storage().ref().child(fileName)
+    await storageRef.delete();
+   
+    deletefirestore();
+
+    
+  showSucess("Congratulations ! Kindly inform to admin as gmail")
+  NavigationContainer.goBack();
+ }
+
+ const deletefirestore=()=>{
+  const usersCollection=db.collection('LivePolyline')
+  const currentUser = firebase.auth().currentUser;
+    const documentRef = usersCollection.doc(currentUser.uid);
+    documentRef.delete();
+ }
+  const getKmlFile = async () => {
+    try {
+      // Retrieve KML file from Firebase Storage
+      const engineerEmail = firebase.auth().currentUser.email;
+      const storageRef = firebase.storage().ref(`${engineerEmail}.kml`);
+      const downloadUrl = await storageRef.getDownloadURL();
+  
+      // Download the KML file
+      const fileUri = FileSystem.documentDirectory + 'file.kml';
+      await FileSystem.downloadAsync(downloadUrl, fileUri);
+  
+      // Parse the KML file
+      const kmlContent = await FileSystem.readAsStringAsync(fileUri);
+      const kmlJson = await xml2js.parseStringPromise(kmlContent);
+        
+
+
+  kmlJson.kml.Document[0].Folder.forEach((folder) => {
+   if (folder.Placemark) {
+     const placemarks = folder.Placemark;
+     
+     placemarks.forEach((placemark) => {
+      // Get the name of the placemark
+    console.log(placemark.Point)
+
+      // Get the coordinates from the placemark's LineString object
+        if (placemark.LineString && placemark.LineString[0].coordinates) {
+         // Get the coordinates from the placemark's LineString object
+         const coordinatesString = placemark.LineString[0].coordinates[0].trim().split(/\s+/);
+          const placemarkCoordinates = coordinatesString.map((coordinateString) => {
+          const [lng, lat] = coordinateString.split(',').map(parseFloat);
+          return { latitude: lat, longitude: lng };
+           });
+         
+          //  console.log(placemarkCoordinates )
+
+           // Add the remaining coordinates to the state
+           setCoordinates((prevCoordinates) => [...prevCoordinates, ...placemarkCoordinates]);
+               
+                }
+               
+                
+                if (placemark.Point) {
+                  console.log(placemark.Point[0].coordinates[0])
+                  const coordinatesString = placemark.Point[0].coordinates[0].trim().split(/\s+/);
+                  const coordinates = coordinatesString.map((coordinateString) => {
+                    const [lng, lat] = coordinateString.split(',').map(parseFloat);
+                    return { latitude: lat, longitude: lng };
+                  });
+                
+                  setCoordinates((prevCoordinates) => [...prevCoordinates, ...coordinates]);
+                }
+                
+                // console.log(placemark.Point[0])
+             
+              
+});
+  
+  }
+});
+    } catch (error) {
+      console.log('Error retrieving or parsing KML file:', error);
+    }
+  };
+
+  
+useEffect(()=>{
+   const interval=setInterval(()=>{
+            getMyLocation()   
+    
+  
+  },7000);
+
+  return ()=>clearInterval(interval)
+
+  });
+  
+ 
+//Live Location
+const getMyLocation=async()=>{
+    
+  let { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    return;
+  }
+
+  let location = await Location.getCurrentPositionAsync({});
+
+const latitude=location.coords.latitude
+const longitude=location.coords.longitude
+     
+storeData(latitude,longitude)
+Get();
+if(isTracking){
+ 
+  setLiveCords((prevCords) => {
+    if (Array.isArray(prevCords)) {
+      return [...prevCords, {latitude, longitude}];
+    } else {
+      return [{latitude, longitude}];
+    }
+  });
+ 
+}
+}
+
+
+const AddPolycordinates=async()=>{
+  const usersCollection=db.collection('LivePolyline')
+
+  const currentUserEmail=firebase.auth().currentUser.email;
+  // Query the collection for the document with the matching email
+  const userDoc = await usersCollection.where('email', '==',currentUserEmail).get();
+  
+  // Retrieve the document data
+  if (!userDoc.empty) {
+       
+      userDoc.forEach((doc) => {
+      const data = doc.data();
+   
+      if(data.polylineCordinates !== undefined){
+        const cordinates = data.polylineCordinates;
+        const cordinateArray = Object.values(cordinates).map(cord => { 
+          return {
+            latitude: cord.latitude,
+            longitude: cord.longitude
+          };
+        });
+        console.log("Fetching form firebase",cordinateArray);
+        setLiveCords(cordinateArray);
+      
+        const covereddistance=data.distanceCovered
+        console.log("Add Polyline livecords",livecords);
+        console.log("distance",covereddistance)
+        setDistance(covereddistance)
+      }
+       
+      else{
+       
+      }
+     
+         })
+    }
+}
+//Storing live polyline
+const startTracking = async () => {
+  let { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    return;
+  }
+
+  let location = await Location.getCurrentPositionAsync({});
+
+  const latitude = location.coords.latitude;
+  const longitude = location.coords.longitude;
+
+
+  // Initialize the livecords array with the current location
+  
+  
+
+  
+  
+  if(livecords.length==null){
+    setLiveCords(currlocation.latitude,currlocation.longitude)
+    console.log("Livecords from loication",livecords)
+    setIsTracking(true);
+  }
+  else{
+  setLiveCords((prevCords) => [...prevCords, {latitude,longitude}]);
+   
+  
+  setIsTracking(true);
+  }
+}
+
+
+  const storePolyline = async () => {
+    try {
+      const usersCollection = db.collection('LivePolyline');
+      const currentUser = firebase.auth().currentUser;
+      const documentRef = usersCollection.doc(currentUser.uid);
+  
+      const documentSnapshot = await documentRef.get();
+       const DistanceCovered=calculateTotalDistance(livecords)
+      
+      if (documentSnapshot.exists) {
+        // The document already exists, so update it
+        await documentRef.update({
+          email: currentUser.email,
+          polylineCordinates: livecords,
+          distanceCovered:DistanceCovered
+        });
+     
+      } else {
+        // The document does not exist, so create a new one
+        await documentRef.set({
+          email: currentUser.email,
+          polylineCordinates: livecords,
+          distanceCovered:DistanceCovered
+        });
+        console.log('Document created polyline');
+      }
+  
+      showSucess('Your location is stored');
+    } catch (error) {
+      console.error(error);
+    }
+  }; 
+
+    //Storing live location
+    const storeData=(lat,long)=>{
+      try{
+    
+      const usersCollection = db.collection('LiveLocation')
+      const currentUser = firebase.auth().currentUser;
+    
+    
+    
+    // Add a new document to the collection with the user's data
+    usersCollection.doc(currentUser.uid).set({
+         
+    email: currentUser.email,
+    latitude:lat,
+    longitude:long,
+    
+    
+    })
+    
+    
+      }
+      catch(error){
+        console.log(error)
+      } 
+    } 
+    const animate=(latitude,longitude)=>{
+      const newCoordinate={latitude,longitude}
+       if(markerRef.current){
+     
+         markerRef.current.animateMarkerToCoordinate(newCoordinate,7000);
+       
+      }
+      
+      }
+    //GEt method to retreive live location
+    const Get=async()=>{
+      try{
+
+       
+        const usersCollection=db.collection('LiveLocation')
+      
+        const currentUserEmail=firebase.auth().currentUser.email;
+        // Query the collection for the document with the matching email
+        const userDoc = await usersCollection.where('email', '==',currentUserEmail).get();
+        
+        // Retrieve the document data
+        if (!userDoc.empty) {
+             
+            userDoc.forEach((doc) => {
+            const data = doc.data();
+          
+             const lat=data.latitude;
+             const longitude=data.longitude;
+            animate(lat,longitude)
+                   
+            setState({...state,
+    
+               currlocation:new AnimatedRegion({
+                latitude: data.latitude,
+                longitude: data.longitude,
+                latitudeDelta:LATITUDE_DELTA,
+                longitudeDelta:LONGITUDE_DELTA
+                
+               },
+
+             
+        
+               ),  
+
+               
+          })
+                
+          })
+         
+            
+        } else {
+          console.log('No matching document!');
+        }
+          }
+    
+          catch(error){
+            console.log(error)
+          }
+                     
+        }
+    
+
+
+          const handleStop = () => {
+           setIsTracking(false)
+        
+           storePolyline();
+           
+            
+           console.log(livecords)
+          };
+        
+    
+
+          const  calculateTotalDistance=(coordinates) =>{
+            let totalDistance = 0;
+            for (let i = 0; i < coordinates.length - 1; i++) {
+              const {latitude: lat1, longitude: lon1} = coordinates[i];
+              const {latitude: lat2, longitude: lon2} = coordinates[i+1];
+              const d = distance(lat1, lon1, lat2, lon2);
+              totalDistance += d;
+            }
+
+            if(totalDistance>0.5||totalDistance==0.5){
+            return totalDistance;
+            }
+            else
+            {
+              return 0;
+            }
+          }
+          
+          // calculate total distance covered from live coordinates
+          const R = 6371; // radius of the earth in km
+
+          const toRad=(deg) =>{
+            return deg * (Math.PI/180);
+          }
+          
+          const  distance=(lat1, lon1, lat2, lon2)=> {
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const d = R * c;
+                
+             return d.toFixed(10);
+                
+          }
+
+
+
+
+
+  return (
+    
+    <View style={styles.container}>
+     <MapView
+       showsBuildings={true}
+  
+       ref={mapRef}
+       provider={PROVIDER_GOOGLE}
+       style={styles.map}
+       showsIndoors={true}
+     
+   
+        initialRegion={{ latitude: 33.738045 , longitude: 73.084488, latitudeDelta:LATITUDE_DELTA, longitudeDelta:LONGITUDE_DELTA  }}
+      > 
+      <Polyline
+        coordinates={coordinates}
+        
+        strokeColor={'#EDD270'}
+        strokeWidth={6}
+      />
+    
+
+{isTracking && livecords.length > 0  ? (
+  <Polyline
+    coordinates={livecords}
+   
+    strokeColor={'green'}
+    strokeWidth={10}
+  />
+) : null}
+ 
+   
+
+{ Object.keys(currlocation).length > 0 && (
+  <Marker.Animated
+  draggable={true}
+
+  ref={markerRef}
+     
+    title="Your live location"
+    coordinate={currlocation}
+    image={ImagePath.LiveLocation}
+  />
+)}
+
+      </MapView>
+    
+   
+ 
+ 
+      <View style={styles.BottomCard}>
+      
+      <View  style={{ position:'absolute',
+        bottom:0,
+        
+        paddingBottom:80,
+        right:5,}}>
+   <CalculateCard distance={Distance} />
+   </View>
+       
+     <View style={{flex:1,flexDirection:'row',paddingBottom:70}}>
+     <TouchableOpacity
+        style={[
+          styles.TouchContainer,
+          {
+            backgroundColor: isTracking ? 'red' : 'green',
+          },
+        ]}
+        
+        onPress={isTracking ? handleStop : startTracking}
+      >
+        <Text style={{ fontSize: 20,textAlign: 'center', alignItems: 'center', marginTop: 1,paddingLeft:120,paddingRight:90, color: 'white' }}>
+        {isTracking?'Stop' : 'Start'}</Text>   
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.TouchContainer,
+          {
+            backgroundColor: 'red',
+          },
+        ]}
+        
+        onPress={handleDone}
+      >
+        <Text style={{ fontSize: 20,textAlign: 'center', alignItems: 'center', marginTop: 1,paddingLeft:10,paddingRight:30, color: 'white' }}>     Done
+        </Text>   
+      </TouchableOpacity>
+      </View>
+</View>
+{/* ) } */}
+    </View>
+  );
+  }
+;
+const styles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  TouchContainer:{
+    backgroundColor:'white',
+    borderWidth:2,
+    
+    borderRadius:1,
+    alignItems:'center',
+    height:48,
+    justifyContent:'center',
+    marginTop:16,
+    borderColor:'white',
+  },
   BottomCard:{
+    
     backgroundColor:'white',
     width:'100%',
     padding:moderateScale(10),
     borderTopEndRadius:24,
     borderTopStartRadius:24,
-   
-
-  },
+  } ,
   Cardcontainer: {
     flex: 1,
    
     backgroundColor:'white',
-      right:0,
-      bottom:0,
+      alignItems: 'center',
+      justifyContent: 'center',
       elevation:3,
       borderRadius:10,
       borderColor:'#007ACC',
@@ -425,36 +597,15 @@ const styles=StyleSheet.create({
       shadowOffset:'#33333',
       shadowOpacity:1,
       shadowColor:'#4C5053',
-  
+     padding:moderateScale(10),
+
+      margin:20,
+      alignItems:'center'
       
       
       
-  },    
+    
+    },
+});
 
-
-  DistanceContainer:{
-    position:'absolute',
-    backgroundColor:'white',
-    bottom:0,
-    right:0,
-    elevation:3,
-  },
-  ViewContainer:{
-    flex:1,
-    flexDirection:'column',
-  }
-  ,
-
-  TouchContainer:{
-    backgroundColor:'green',
-    borderWidth:2,
-
-    borderRadius:1,
-    alignItems:'center',
-    height:48,
-    justifyContent:'center',
-    marginTop:16,
-    borderColor:'white',
-  }
-})
 export default Map;
