@@ -152,10 +152,12 @@ NavigationContainer.navigate("ForgotScreen")
       
     
     <KeyboardAvoidingView style={styles.Cardcontainer} >
+      
       <View style={styles.NestedHeader}>
-     <Text style={{fontSize:50,fontWeight:'600',paddingRight:moderateScale(1),marginTop:moderateScale(10)}}>Login</Text>
-     < Text style={{color:'black', color:'#B5B5B5',fontSize:15 , padding:moderateScale(5), }}>  Cluster Routes</Text></ View>
-     < Text style={{fontSize:15,color:'black',paddingRight:moderateScale(150),}}>Log  in as {selectedValue}</Text>
+
+     <Text style={{fontSize:50,fontWeight:'600',paddingRight:moderateScale(1)}}>Login</Text>
+</ View>
+     < Text style={{fontSize:15,color:'black',paddingRight:moderateScale(100)}}>Log  in as {selectedValue}</Text>
      <Picker
         selectedValue={selectedValue}
         onValueChange={handlePickerValueChange}
@@ -183,7 +185,7 @@ NavigationContainer.navigate("ForgotScreen")
    
    </TouchableOpacity>
    <TouchableOpacity  style={styles.submitButton} onPress={MoveSignUP}>
-   <Text  style={{color:'#BCBCBC',fontSize:15}}>Signup!</Text>
+   <Text  style={{color:'#B5B5B5',fontSize:15,}}> Signup!</Text>
    </TouchableOpacity>
     </KeyboardAvoidingView>
     
@@ -203,7 +205,7 @@ const styles = StyleSheet.create({
        borderTopRightRadius:160,
        borderTopLeftRadius:5,  
        borderRadius:5,
-        marginTop:moderateScale(90),
+        marginTop:moderateScale(50),
       borderColor:'#007ACC',
       color:'#5388CE',    
        padding:moderateScale(50),
@@ -215,6 +217,7 @@ const styles = StyleSheet.create({
       paddingLeft:verticalScale(48),
       paddingRight:verticalScale(110),
   },
+
   Container:
 {
   paddingBottom:100,

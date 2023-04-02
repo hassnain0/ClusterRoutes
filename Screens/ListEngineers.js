@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import {Alert, View, Text, FlatList, TouchableOpacity ,Image} from 'react-native';
+import {Alert, View, Text, FlatList, TouchableOpacity,TextInput ,Image} from 'react-native';
 import { db,firebase } from './Firbase';
-
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function ListEngineers({ navigation }) {
   const [engineers, setEngineers] = useState([]);
-  const [isAvailable,setIsAvailable]=useState([])
-  const [engineerStatus, setEngineerStatus] = useState([]);
+  const [searchText, setSearchText] = useState('');
   useEffect(() => {
    
     const collectionRef = db.collection('Usernmaes');
@@ -22,6 +21,14 @@ export default function ListEngineers({ navigation }) {
    
   }, []);
 
+  const handleSearch = (text) => {
+    setSearchText(text);
+  };
+
+  const filteredEngineers = engineers.filter(
+    (engineer) =>
+      engineer.Username.toLowerCase().includes(searchText.toLowerCase())
+  );
  
   const handleViewEngineer = (engineer) => {
    const email=engineer.email;
@@ -73,10 +80,31 @@ export default function ListEngineers({ navigation }) {
   );
 
   return (
+    
+    <View>
+  <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          padding: 8,
+          backgroundColor: '#fff',
+          borderRadius: 8,
+          margin: 16,
+        }}
+      >
+        <Icon name="search" size={25} color="#ccc" style={{ padding: 8 }} />
+        <TextInput
+          style={{ flex: 1, height: 40, padding: 6 }}
+          placeholder="            Search Engineer by name"
+          onChangeText={handleSearch}
+          value={searchText}
+        />
+      </View>
     <FlatList
-      data={engineers}
+      data={filteredEngineers}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
     />
+  </View>
   );
 }

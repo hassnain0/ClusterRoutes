@@ -1,16 +1,15 @@
-import React, {useState,useEffect} from "react";
-import { StyleSheet,View,  Button, Text, TouchableOpacity, Alert, TextInput, ScrollView, BackHandler,Pressable,Image } from "react-native";
+import React, {useEffect} from "react";
+import { StyleSheet,View, Text, TouchableOpacity, Alert, TextInput, ScrollView, BackHandler,Pressable,Image } from "react-native";
 import { moderateScale,horizontalScale, verticalScale } from "./Dimension";
-import PushNotification from "react-native-push-notification";
+
 import { FloatingAction } from "react-native-floating-action";
-import DocumentPicker from 'react-native-document-picker';
+
 import firebase from "firebase/compat";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { SideMenu } from "./HeaderComponent";
-import ChooseRoute from './ChooseRoute'
+
+
 import Temp from "./Temp";
-import Map from "./Map";
+
 import { db,auth } from "./Firbase";
 import { showAlert, showSucess } from "./Helper/Helper";
 import Login from "./Login";
@@ -47,6 +46,27 @@ const AdminHomeScreen=({navigation})=>{
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, [])
   );
+  const handlelogout=()=>{
+    Alert.alert(
+      'Done Route',
+      'Are you sure you want  to logout?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => null,
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          onPress: () =>logout()
+        }
+      ],
+      { cancelable: false,
+        titleStyle: { color: 'red' },
+        messageStyle: { color: 'blue' }, }
+    );
+    return true;
+  };
   const NavigationContainer=useNavigation();
   const MoveScreen=()=>{
     NavigationContainer.navigate("ListEngineers")
@@ -54,7 +74,7 @@ const AdminHomeScreen=({navigation})=>{
 useEffect(() => {
   navigation.setOptions({
     headerRight: () => (
-      <TouchableOpacity onPress={logout}>
+      <TouchableOpacity onPress={handlelogout}>
         <Image source={require('../assets/LogoutButton.png')} style={{width:30,height:30,marginRight:5}}></Image>
       </TouchableOpacity>
     ),
@@ -65,7 +85,7 @@ const logout = () => {
  
   auth
     .signOut()
-    .then(() => showSucess("Successfully logout"));
+    .then(() => showSucess("                    Successfully logout"));
     navigation.replace("Login")
 }
     
@@ -73,31 +93,29 @@ const logout = () => {
 
 
         return(
-      
+      <ScrollView>
         <View style={styles.ViewContainer}>
 
 <View style={styles.CardContainer}>
   <Image source={require('../assets/HomeScreen.png')}    style={styles.ImageContainer}></Image>
   <TouchableOpacity
+      onPress={MoveScreen}
         style={[
-          styles.TouchContainer,
-          
+          styles.TouchContainer2,
+         
         ]}
-       onPress={MoveScreen}
+       
+       
       >
-
-        <Text style={{ fontSize: 20,borderColor:'#002F46', alignItems: 'center',marginLeft:100,marginRight:100, color: 'white', }}>         Engineers         </Text>  
+         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,marginBottom:2}}>   Engineer's List  </Text>  
       </TouchableOpacity>
-     
-                
+                     
 </View>
-
-    <View style={styles.ImageBackgroundcontainer}>
-    <Temp />    
-      </View>     
+  
          
       
         </View>
+        </ScrollView>
       
     )
 };
@@ -116,7 +134,6 @@ paddingTop:120,
 flex: 1,
 flexDirection:'column',
 padding:20,
-
 elevation:5,
 
 
@@ -127,6 +144,19 @@ elevation:5,
 
 
 
+},
+TouchContainer2:{
+  backgroundColor:'#002F46',
+  
+  elevation:10,
+  borderWidth:2,
+    marginBottom:100, 
+  borderRadius:15,
+  alignItems:'center',
+  height:70,
+  justifyContent:'center',
+  marginTop:16,
+  borderColor:'white',
 },
 MapContainer:{
     

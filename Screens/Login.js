@@ -90,7 +90,7 @@ const Login=({navigation})=>{
   
 
   //Push notification 
-const [keyboardShown,setKeyboardShown]=useState([])
+
 
     return(
 
@@ -102,7 +102,7 @@ const [keyboardShown,setKeyboardShown]=useState([])
         
           <Card
           
-               style={{ transform: [{ translateY: keyboardShown ? -100 : 0 }] }}
+              
                navigation={navigation}
             /> 
         
@@ -140,17 +140,17 @@ const styles=StyleSheet.create({
         
         borderColor:'#007ACC',
            
-        paddingLeft:verticalScale(10),
+        paddingLeft:verticalScale(5),
         marginRight:moderateScale(150),
-        paddingRight:verticalScale(10),
+        paddingRight:verticalScale(1),
         paddingTop:horizontalScale(1),
         marginLeft:horizontalScale(130),
-        marginBottom:horizontalScale(100),
+
         
         
         shadowOpacity:1,
         shadowColor:'#4C5053',
-      marginBottom:moderateScale(10),
+      marginBottom:moderateScale(20),
       
     }
   });

@@ -12,6 +12,7 @@ const SignUp= ({navigation}) => {
   
 
   return (
+    <ScrollView>
     <ImageBackground  style={styles.ImageBackgroundcontainer}source={require('../assets/ImageBackground.jpeg')}>
    
     <SignUPScreenCom
@@ -21,7 +22,9 @@ const SignUp= ({navigation}) => {
       /> 
  
  </ImageBackground>
+ </ScrollView>
   );
+
 };
 
 const styles=StyleSheet.create({

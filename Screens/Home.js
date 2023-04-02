@@ -44,7 +44,7 @@ const Home=({navigation})=>{
 useEffect(() => {
   navigation.setOptions({
     headerRight: () => (
-      <TouchableOpacity onPress={logout}>
+      <TouchableOpacity onPress={handlelogout}>
         <Image source={require('../assets/LogoutButton.png')} style={{width:30,height:30,marginRight:5}}></Image>
       </TouchableOpacity>
     ),
@@ -78,7 +78,7 @@ const logout = () => {
   
   auth
     .signOut()
-    .then(() => showSucess("Successfully logout"));
+    .then(() => showSucess("                Successfully logout"));
     navigation.replace("Login")
 }
     const MoveScreen=()=>{
@@ -104,7 +104,7 @@ storageRef.getDownloadURL()
     };
 
         return(
-      
+      <ScrollView>
         <View style={styles.ViewContainer}>
 
 <View style={styles.CardContainer}>
@@ -123,23 +123,18 @@ storageRef.getDownloadURL()
       onPress={MoveScreen}
         style={[
           styles.TouchContainer2,
-         
-        ]}
-       
-       
+]}
       >
-         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,marginBottom:2}}>   Create Route  </Text>  
+         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,marginBottom:2}}>  Upload Route </Text>  
       </TouchableOpacity>
-                
+                    
 </View>
 
     <View style={styles.ImageBackgroundcontainer}>
-    <Temp />    
-      </View>     
-         
-      
+    <Temp />       
+      </View>      
         </View>
-      
+        </ScrollView>
     )
 };
 
@@ -153,11 +148,12 @@ flex:1,
 
 ImageBackgroundcontainer: {
 
-paddingTop:10,
+
 flex: 1,
 flexDirection:'column',
 padding:20,
 
+paddingBottom:20,
 elevation:5,
 
 
@@ -193,7 +189,7 @@ MapContainer:{
 
       CardContainer:{
         flex: 1, height: '100%', width: '100%', borderRadius: 10, 
-        marginTop:60,
+        
         alignItems:'center',
         justifyContent:'center'
       },
@@ -202,7 +198,7 @@ MapContainer:{
         
         elevation:10,
         borderWidth:2,
-          marginBottom:20, 
+           
         borderRadius:15,
         alignItems:'center',
         height:70,

@@ -56,8 +56,9 @@ const styles = StyleSheet.create({
     shadowOffset:'#33333',
     shadowOpacity:1,
     shadowColor:'#4C5053',
+    paddingRight:100,
     paddingTop:80,
-    paddingBottom:20,
+    paddingBottom:120,
     alignItems:'center'
     
 

@@ -4,15 +4,15 @@ import MapView, { Marker, PROVIDER_GOOGLE,ActivityIndicator,Polyline,AnimatedReg
 import { db, firebase } from './Firbase';
 import * as FileSystem from 'expo-file-system';
 import xml2js, { parseString } from 'xml2js';
-import * as Location from 'expo-location'
+
 import { moderateScale } from './Dimension';
 import ImagePath from './ImagePath';
-import { locationPermission, showError, showSucess } from './Helper/Helper';
+
 import CalculateCard from './CalculateCard';
  
 const ViewMap= ({route}) => {
-  // const [markers, setMarkers] = useState([]);
-  const [isTracking, setIsTracking] = useState(false);  
+const [polylines,setPolylines]=useState([]);
+    
   const mapRef = useRef(null);
   const [Distance,setDistance]=useState([0]);
   const markerRef = useRef(null);
@@ -58,84 +58,83 @@ const LONGITUDE_DELTA=LATITUDE_DELTA*ASPECT_RATIO;
          
         ]);
 
-        useEffect(() => {
-          if (mapRef.current && coordinates.length > 0) {
-            mapRef.current.fitToCoordinates(coordinates, {
-              edgePadding: { top: 20, right: 20, bottom: 20, left: 20 },
-              animated: true,
-            });
-          }
-        }, [mapRef, coordinates]);
+       
 
         
           
 
 
-    const getKmlFile = async () => {
-    try {
-      // Retrieve KML file from Firebase Storage
-      const engineerEmail = route.params.email;
-      const storageRef = firebase.storage().ref(`${engineerEmail}.kml`);
-      const downloadUrl = await storageRef.getDownloadURL();
-  
-      // Download the KML file
-      const fileUri = FileSystem.documentDirectory + 'file.kml';
-      await FileSystem.downloadAsync(downloadUrl, fileUri);
-  
-      // Parse the KML file
-      const kmlContent = await FileSystem.readAsStringAsync(fileUri);
-      const kmlJson = await xml2js.parseStringPromise(kmlContent);
-        
-
-
-  kmlJson.kml.Document[0].Folder.forEach((folder) => {
-   if (folder.Placemark) {
-     const placemarks = folder.Placemark;
-     
-     placemarks.forEach((placemark) => {
-      // Get the name of the placemark
-    
-
-      // Get the coordinates from the placemark's LineString object
-        if (placemark.LineString && placemark.LineString[0].coordinates) {
-         // Get the coordinates from the placemark's LineString object
-         const coordinatesString = placemark.LineString[0].coordinates[0].trim().split(/\s+/);
-          const placemarkCoordinates = coordinatesString.map((coordinateString) => {
-          const [lng, lat] = coordinateString.split(',').map(parseFloat);
-          return { latitude: lat, longitude: lng };
-           });
-         
-           
-
-           // Add the remaining coordinates to the state
-           setCoordinates((prevCoordinates) => [...prevCoordinates, ...placemarkCoordinates]);
-               
-                }
-                
-             
+        const getKmlFile = async () => {
+          try {
+            // Retrieve KML file from Firebase Storage
+            const engineerEmail = route.params.email;
+            const storageRef = firebase.storage().ref(`${engineerEmail}.kml`);
+            const downloadUrl = await storageRef.getDownloadURL();
+      
+            // Download the KML file
+            const fileUri = FileSystem.documentDirectory + 'file.kml';
+            await FileSystem.downloadAsync(downloadUrl, fileUri);
+      
+            // Parse the KML file
+            const kmlContent = await FileSystem.readAsStringAsync(fileUri);
+            const kmlJson = await xml2js.parseStringPromise(kmlContent);
+            kmlJson.kml.Document[0].Folder.forEach((folder) => {
+              if (folder.Placemark) {
+                const placemarks = folder.Placemark;
+                console.log("placemarks ",placemarks)
+                placemarks.forEach((placemark) => {
+                  // Get the name of the placemark
+      
+      
+                  // Get the coordinates from the placemark's LineString object
+                  if (placemark.LineString && placemark.LineString[0].coordinates) {
+                    // Get the coordinates from the placemark's LineString object
+                    const coordinatesString = placemark.LineString[0].coordinates[0].trim().split(/\s+/);
+                    const placemarkCoordinates = coordinatesString.map((coordinateString) => {
+                      const [lng, lat] = coordinateString.split(',').map(parseFloat);
+                      return { latitude: lat, longitude: lng };
+                    });
+      
+                    //  console.log(placemarkCoordinates )
+      
+                    // Add the remaining coordinates to the state
+                    const polyline = <Polyline coordinates={placemarkCoordinates} strokeColor={'#FED55F'} strokeWidth={4} />;
+      
+                    // Add the new polyline to the state
+                    setPolylines((prevPolylines) => [...prevPolylines, polyline]);
+                    mapRef.current.fitToCoordinates(placemarkCoordinates, {
+                      edgePadding: {
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20,
+                      },
+                    });
+                  }
               
-});
-  
-  }
-});
-    } catch (error) {
-      console.log('Error retrieving or parsing KML file:', error);
-    }
-  };
+                });
+      
+              }
+            });
+      
+          } catch (error) {
+            console.log('Error retrieving or parsing KML file:', error);
+          }
+        };
 
   //  getLocation();
   //  Tracking();
-useEffect(()=>{
-   const interval=setInterval(()=>{
-           Get(); 
-         AddPolycordinates();
-  
-  },7000);
 
-  return ()=>clearInterval(interval)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      Get(); 
+      AddPolycordinates();
+    }, 3000);
+
+    return () => clearInterval(interval)
 
   });
-  
+
  
 
 
@@ -310,11 +309,7 @@ const AddPolycordinates=async()=>{
         initialRegion={{ latitude: 33.738045 , longitude: 73.084488, latitudeDelta:LATITUDE_DELTA, longitudeDelta:LONGITUDE_DELTA  }}
       > 
 
-       <Polyline
-        coordinates={coordinates}
-        strokeColor={'#EDD270'}
-        strokeWidth={6}
-        />
+      {polylines}
 
 
 {livecords.length > 0  ? (
@@ -338,7 +333,7 @@ const AddPolycordinates=async()=>{
 )}
 
       </MapView>
-      {/* {shownVaraible < 1 && ( */}
+    
    
  
       <View style={styles.BottomCard}>
