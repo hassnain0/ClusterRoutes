@@ -1,18 +1,22 @@
 import React, {useState,useEffect} from "react";
 import { StyleSheet,View,  Button, Text, TouchableOpacity, Alert, TextInput, ScrollView, BackHandler,Pressable,Image } from "react-native";
 import { moderateScale,horizontalScale, verticalScale } from "./Dimension";
-
+import NetInfo from '@react-native-community/netinfo';
 import firebase from "firebase/compat";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import ChooseRoute from './ChooseRoute'
 import Temp from "./Temp";
 import Map from './Map'
 import { db,auth } from "./Firbase";
-import { showAlert, showSucess } from "./Helper/Helper";
+import { showAlert, showError, showSucess } from "./Helper/Helper";
 import Login from "./Login";
+
 
 const Home=({navigation})=>{
 
+
+  //Varaible for state
+  
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
@@ -82,24 +86,41 @@ const logout = () => {
     navigation.replace("Login")
 }
     const MoveScreen=()=>{
-      NavigationContainer.navigate("ChooseRoute")
+     
+       NavigationContainer.navigate("ChooseRoute")
     }
 
 // }
+
  const NavigationContainer=useNavigation();
-const checkDocExists=()=>{
+const checkDocExists=async()=>{
  const email=firebase.auth().currentUser.email
 
-const fileName = `${email}.kml`; 
+  const doc = await db.collection("Usernames").doc(email).get();
+  
+   if (doc.exists) {
+  
+    const data = doc.data();
+
+    const Username=data.email;
+    const fileName = `${Username}.kml`; 
 const storageRef = firebase.storage().ref().child(fileName);
 storageRef.getDownloadURL()
   .then((url) => {
+   
     NavigationContainer.navigate("Map")
     
   })
   .catch((error) => {
     Alert.alert("You have no any route to covered")
   });
+  }
+  else
+  {
+    Alert.alert("You have no any route to covered")
+  }
+
+
 
     };
 

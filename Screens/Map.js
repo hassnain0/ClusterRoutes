@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Dimensions, TouchableOpacity, Text, Alert } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, ActivityIndicator, Polyline, AnimatedRegion, } from 'react-native-maps';
+import { StyleSheet, View, Dimensions, Alert, TouchableOpacity, Modal, Text, TextInput } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE, ActivityIndicator, Polyline, AnimatedRegion } from 'react-native-maps';
 import { db, firebase } from './Firbase';
 import * as FileSystem from 'expo-file-system';
 import xml2js, { parseString } from 'xml2js';
@@ -10,34 +10,35 @@ import ImagePath from './ImagePath';
 import { locationPermission, showError, showSucess } from './Helper/Helper';
 import CalculateCard from './CalculateCard';
 import { useNavigation } from '@react-navigation/native';
+import Spinner from 'react-native-loading-spinner-overlay';
 import Login from './Login';
+import { auth } from './Firbase';
+
 const Map = ({ navigation }) => {
   // const [markers, setMarkers] = useState([]);
   const [isTracking, setIsTracking] = useState(false);
   const mapRef = useRef(null);
+
   const [Distance, setDistance] = useState([0]);
   const markerRef = useRef(null);
-  //
+  const [dataLoaded, setDataLoaded] = useState(true)
+  const [inputPress, setInputPress] = useState(false);
+  const [inputText, setInputText] = useState();
 
   const [livecords, setLiveCords] = useState([
-  //   latitudeDelta: LATITUDE_DELTA,
-  //   longitudeDelta: LONGITUDE_DELTA,
+    //   latitudeDelta: LATITUDE_DELTA,
+    //   longitudeDelta: LONGITUDE_DELTA,
   ]);
-
+  const [showInput, setShowInput] = useState(false);
   const [polylines, setPolylines] = useState([]);
 
-  // const [region, setRegion] = useState({
-
-  //   latitudeDelta: LATITUDE_DELTA,
-  //   longitudeDelta: LONGITUDE_DELTA,
-  // });
-
-
   useEffect(() => {
+
     getKmlFile();
     AddPolycordinates();
 
   }, []);
+
   const screen = Dimensions.get('window')
   const ASPECT_RATIO = screen.width / screen.height;
   const LATITUDE_DELTA = 0.9222;
@@ -66,6 +67,7 @@ const Map = ({ navigation }) => {
 
     Alert.alert(
       'Done Route',
+
       'Are you sure you want  to done?',
       [
         {
@@ -84,15 +86,14 @@ const Map = ({ navigation }) => {
   };
   const NavigationContainer = useNavigation();
   const handleDelete = async () => {
+    setDataLoaded(true)
     const email = firebase.auth().currentUser.email;
     const fileName = `${email}.kml`;
     const storageRef = firebase.storage().ref().child(fileName)
     await storageRef.delete();
 
     deletefirestore();
-
-
-    showSucess("Congratulations ! Kindly inform to admin as gmail")
+    showSucess("Congratulations ! Kindly inform to admin")
     NavigationContainer.goBack();
   }
 
@@ -103,9 +104,11 @@ const Map = ({ navigation }) => {
     documentRef.delete();
   }
   const getKmlFile = async () => {
+
     try {
       // Retrieve KML file from Firebase Storage
       const engineerEmail = firebase.auth().currentUser.email;
+
       const storageRef = firebase.storage().ref(`${engineerEmail}.kml`);
       const downloadUrl = await storageRef.getDownloadURL();
 
@@ -119,7 +122,7 @@ const Map = ({ navigation }) => {
       kmlJson.kml.Document[0].Folder.forEach((folder) => {
         if (folder.Placemark) {
           const placemarks = folder.Placemark;
-          console.log("placemarks ",placemarks)
+
           placemarks.forEach((placemark) => {
             // Get the name of the placemark
 
@@ -133,14 +136,12 @@ const Map = ({ navigation }) => {
                 return { latitude: lat, longitude: lng };
               });
 
-              
-              //  console.log(placemarkCoordinates )
-
               // Add the remaining coordinates to the state
               const polyline = <Polyline coordinates={placemarkCoordinates} strokeColor={'#FED55F'} strokeWidth={4} />;
 
               // Add the new polyline to the state
               setPolylines((prevPolylines) => [...prevPolylines, polyline]);
+
               mapRef.current.fitToCoordinates(placemarkCoordinates, {
                 edgePadding: {
                   top: 20,
@@ -149,8 +150,9 @@ const Map = ({ navigation }) => {
                   left: 20,
                 },
               });
+              setDataLoaded(false)
             }
-        
+
           });
 
         }
@@ -165,12 +167,32 @@ const Map = ({ navigation }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       getMyLocation()
-    },3000);
+
+    }, 3000);
 
     return () => clearInterval(interval)
 
   });
 
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("Called")
+      if (isTracking) {
+        SetDistance()
+      }
+    }, 2000);
+
+    return () => clearInterval(interval)
+
+  });
+
+  const SetDistance = () => {
+
+    const DistanceCovered = calculateTotalDistance(livecords)
+    setDistance(DistanceCovered)
+
+  }
 
   //Live Location
   const getMyLocation = async () => {
@@ -181,7 +203,7 @@ const Map = ({ navigation }) => {
     }
 
     let location = await Location.getCurrentPositionAsync({
-      enableHighAccuracy:true
+      enableHighAccuracy: true
     });
 
     const latitude = location.coords.latitude
@@ -202,8 +224,8 @@ const Map = ({ navigation }) => {
     }
   }
 
-
-  const AddPolycordinates = async () => {'.'
+  const AddPolycordinates = async () => {
+    '.'
     const usersCollection = db.collection('LivePolyline')
 
     const currentUserEmail = firebase.auth().currentUser.email;
@@ -239,7 +261,7 @@ const Map = ({ navigation }) => {
     }
   }
   //Storing live polyline
-    const startTracking = async () => {
+  const startTracking = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       return;
@@ -252,7 +274,7 @@ const Map = ({ navigation }) => {
 
     if (livecords.length == null) {
       setLiveCords(latitude, longitude)
-    
+
       setIsTracking(true);
     }
     else {
@@ -273,6 +295,7 @@ const Map = ({ navigation }) => {
       const documentSnapshot = await documentRef.get();
       const DistanceCovered = calculateTotalDistance(livecords)
 
+
       if (documentSnapshot.exists) {
         // The document already exists, so update it
         await documentRef.update({
@@ -291,8 +314,9 @@ const Map = ({ navigation }) => {
         console.log('Document created polyline');
       }
 
-      showSucess('Your location is stored');
+      showSucess('             Your location is stored');
     } catch (error) {
+
       console.error(error);
     }
   };
@@ -331,7 +355,7 @@ const Map = ({ navigation }) => {
     }
 
   }
-  //GEt method to retreive live location
+  //Get method to retreive live location
   const Get = async () => {
     try {
 
@@ -391,8 +415,77 @@ const Map = ({ navigation }) => {
 
     storePolyline();
   };
+  const handleConfirm = () => {
 
+    Alert.alert(
+      'Cancel Route',
+      'Are you sure you want  to cancel the route?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => null,
+          style: 'cancel'
+        },
+        {
+          text: 'Confirm',
+          onPress: () => handlePostponed()
+        }
+      ],
 
+    );
+    return true;
+  };
+
+  const handlePostponed = () => {
+    console.log(inputText)
+    if (inputText === 'undefined') {
+      const currentUser = firebase.auth().currentUser.email
+      db.collection('Reports')
+        .doc(currentUser.uid)
+        .set({
+          email: currentUser,
+          Report: 'Postponed',
+          Status: 'Cancelled'
+
+        })
+        .then(() => {
+          console.log('Document successfully written!');
+          showSucess("You cancelled your route")
+          NavigationContainer.goBack();
+
+        })
+        .catch((error) => {
+          console.error('Error writing document: ', error);
+        });
+    }
+    else {
+      const currentUser = firebase.auth().currentUser.email
+      db.collection('Reports')
+        .doc(currentUser.uid)
+        .set({
+          email: currentUser,
+          Report: inputText,
+          Status: 'Cancelled',
+
+        })
+        .then(() => {
+          console.log('Document successfully written!');
+          showSucess("                You cancelled your route")
+          NavigationContainer.goBack();
+
+        })
+        .catch((error) => {
+          console.error('Error writing document: ', error);
+        });
+    }
+  }
+
+  const handleCancel = () => {
+    NavigationContainer.goBack();
+  }
+  const handlePress = () => {
+    setShowInput(true)
+  }
 
   const calculateTotalDistance = (coordinates) => {
     let totalDistance = 0;
@@ -401,11 +494,17 @@ const Map = ({ navigation }) => {
       const { latitude: lat2, longitude: lon2 } = coordinates[i + 1];
       const d = distance(lat1, lon1, lat2, lon2);
       totalDistance += d;
+
     }
-    
+
+    if (totalDistance > 0.1) {
       return totalDistance.toFixed(2);
-   
+    }
+    else {
+      return 0;
+    }
   }
+
 
   // calculate total distance covered from live coordinates
   const R = 6371; // radius of the earth in km
@@ -430,19 +529,24 @@ const Map = ({ navigation }) => {
 
   return (
 
-     <View style={styles.container}>
-
-       <MapView
+    <View style={styles.container}>
+      <Spinner
+        visible={dataLoaded}
+        textContent={'Loading...'}
+        textStyle={{ color: '#FFF' }}
+      />
+      <MapView
         showsBuildings={true}
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         showsIndoors={true}
-    showsUserLocation={true}
-    showsMyLocationButton={true}
+        maxZoomLevel={16.5}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
         initialRegion={{ latitude: 33.738045, longitude: 73.084488, latitudeDelta: LATITUDE_DELTA, longitudeDelta: LONGITUDE_DELTA }}
       >
-       
+
         {polylines}
 
         {isTracking && livecords.length > 0 ? (
@@ -453,24 +557,28 @@ const Map = ({ navigation }) => {
             strokeWidth={10}
           />
         ) : null}
-
-
-
-{/* 
-{ Object.keys(currlocation).length > 0 && (
-  <Marker.Animated
-  draggable={true}
-
-  ref={markerRef}
-     
-    title="Your live location"
-    coordinate={currlocation}
-    image={ImagePath.LiveLocation}
-  />
-)} */}
-
       </MapView>
 
+      <Modal visible={showInput} transparent={true} >
+        <View style={styles.modalContainer}>
+
+          <TextInput
+
+            style={styles.input}
+            onChangeText={text => setInputText(text)}
+            value={inputText}
+            placeholder='Enter your reason here'
+          />
+          <View style={styles.modalButtonContainer}>
+            <TouchableOpacity onPress={handleCancel}>
+              <Text style={styles.modalButton}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleConfirm}>
+              <Text style={styles.modalButton}>Submit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.BottomCard}>
 
         <View style={{
@@ -494,25 +602,36 @@ const Map = ({ navigation }) => {
 
             onPress={isTracking ? handleStop : startTracking}
           >
-            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 120, paddingRight: 90, color: 'white' }}>
+            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 100, paddingRight: 50, color: 'white' }}>
               {isTracking ? 'Stop' : 'Start'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.TouchContainer,
               {
-                backgroundColor: 'red',
+                backgroundColor: 'green',
               },
             ]}
 
             onPress={handleDone}
           >
-            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 10, paddingRight: 30, color: 'white' }}>     Done
-            </Text>
+            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 20, paddingRight: 30, color: 'white', textAlignVertical: 'center' }}>Done</Text>
           </TouchableOpacity>
+          {/* <TouchableOpacity
+            style={[
+              styles.TouchContainer,
+              {
+                backgroundColor: 'green',
+              },
+            ]}
+
+            onPress={handleConfirm}
+          >
+            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 20, paddingRight: 30, color: 'white', }}>Cancel</Text>
+          </TouchableOpacity> */}
         </View>
       </View>
-      {/* ) } */}
+
     </View>
   );
 }
@@ -566,6 +685,31 @@ const styles = StyleSheet.create({
 
 
 
+  },
+  input: {
+    color: 'grey',
+    height: 30,
+    width: 200,
+    borderWidth: 1,
+    borderColor: 'gray',
+    paddingHorizontal: 5,
+    textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  modalButton: {
+    marginHorizontal: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: 'gray',
+    color: 'white',
   },
 });
 

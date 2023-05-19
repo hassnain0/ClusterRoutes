@@ -74,10 +74,10 @@ const SelectRoute=({route})=>{
         // The file exists in Firebase Storage, so update it
        console.log("blob",fileSnapshot)
         await ref.put(blob);
-        
+
         console.log(`Updated KML file in Firebase Storage at ${ref.fullPath}`);
       } else {
-        // The file doesn't exist in Fire
+        // The file doesn't exist in File
            
         await ref.put(blob);
         
@@ -89,15 +89,37 @@ const SelectRoute=({route})=>{
     };
     
     const handleDone=()=>{
-  
-    const email=route.params.email;
+    try{
+    const Email=route.params.email;
     MailComposer.composeAsync({
-      recipients: [email],
+      recipients: [Email],
       subject: 'Cluster Routes',
       body: 'New route is waiting for you \n Note: Please send back email of completion on same email when you done \n Thankyou Regards TNSS GLOBAL ',
     });
+  
     showSucess(" Route Assigned sucessfully !")
-
+  }
+  catch(erorr){
+    console.log(erorr)
+  }
+  //   // try{
+      
+  //   //   db.collection('Reports')
+  //   //   .doc(currentUser.uid)
+  //   //  .set({
+  //   //    email:Email,
+  //   //    Status:'OnGoing'
+    
+  //   //  })
+     
+  //   // }
+  //   // catch(erorr){
+  //   //   console.log("Error")
+  //   // }
+  // }
+  // catch(error){
+  //   showError("Email is not sent to Engineer")
+  // }
 
   }              
 
@@ -108,13 +130,8 @@ const SelectRoute=({route})=>{
           <ScrollView scrollEnabled={false}
           keyboardShouldPersistTaps="handled"
           style={{backgroundColor:'white',flex:1,padding:24}}>
-
-
-       
-    
-          </ScrollView>  
-          <FloatingAction
-     
+         </ScrollView>  
+           <FloatingAction
                  name='ion|plus'
                  size={25}      
                  color='#002F46'  
@@ -125,9 +142,7 @@ const SelectRoute=({route})=>{
        
       />         
         </View>
-       
-
-    )
+)
 };
 
 const styles=StyleSheet.create({

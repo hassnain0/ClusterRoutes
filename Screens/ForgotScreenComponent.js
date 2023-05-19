@@ -1,18 +1,35 @@
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useState,useEffect} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,Image, ScrollView, Alert, KeyboardAvoidingView } from 'react-native';
 import firebase from "firebase/compat";
 import Login from '../Screens/Login';
 import { auth, db } from './Firbase';
+import NetInfo from '@react-native-community/netinfo';
  import { sendPasswordResetEmail } from '@firebase/auth';
 import { horizontalScale, moderateScale, verticalScale } from './Dimension';
 import { showError, showSucess } from './Helper/Helper';
 
 
 const ForgotScreenComponent=()=>{
-
+  const [isConnected, setIsConnected] = useState(true);
+  useEffect(() => {
+   
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+   
+      
+    return () => {
+      unsubscribe();
+    };
+  }, []);
   const [email,setEmail]=useState([]);
 
   const handleSubmit = () => {
+    if(!isConnected){
+      showError("           Please connect your internet connection")
+      return ;
+
+    }
   sendPasswordResetEmail(auth,email)
      .then(() => {
        setEmail('');

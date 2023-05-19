@@ -2,27 +2,27 @@ import React, { useEffect, useState } from 'react';
 import {Alert, View, Text, FlatList, TouchableOpacity,TextInput ,Image} from 'react-native';
 import { db,firebase } from './Firbase';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Spinner from 'react-native-loading-spinner-overlay';
+import { showSucess } from './Helper/Helper';
 
-export default function ListEngineers({ navigation }) {
+export default function AdminList({ navigation }) {
   const [engineers, setEngineers] = useState([]);
-  const [dataLoaded,setDataLoaded]=useState(true)
   const [searchText, setSearchText] = useState('');
+  const [deleteCount, setDeleteCount] = useState(0); 
+
   useEffect(() => {
    
-    const collectionRef = db.collection('Usernames').where('Status', '==', 'Enabled').where('Value', '==', 'Engineer');
+    const collectionRef = db.collection('Usernames').where('Status', '==', 'Enabled').where('Value', '==', 'Admin');
     collectionRef.get().then((querySnapshot) => {
       const documents = [];
       querySnapshot.forEach((doc) => {
       const data = doc.data();
       documents.push({ ...data, id: doc.id });
-      setDataLoaded(false)
       });
       setEngineers(documents)}).catch((error) => {
       console.log('Error getting engineers:', error);
     })
    
-  }, []);
+  }, [deleteCount]);
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -33,31 +33,22 @@ export default function ListEngineers({ navigation }) {
       engineer.Username.toLowerCase().includes(searchText.toLowerCase())
   );
  
-  const handleViewEngineer = (engineer) => {
-   const email=engineer.email;
-    const fileName = `${email}.kml`; 
-    const storageRef = firebase.storage().ref().child(fileName);
-    storageRef.getDownloadURL()
-      .then((metadata) => {
-        navigation.navigate('ViewMap',{
-          email:engineer.email,
-          
-      });
-      })
-      .catch((error) => {
-        if (error.code === 'storage/object-not-found') {
-        Alert.alert("Engineer has no any route to covered")
-        }
-      });
-   
-  };
-
-  const handleAssignEngineer = (engineer) => {
-    navigation.navigate('SelectRoute',{
-        email:engineer.email,
-        
+  const handleDisbaleAdmin=(engineer)=>{
+    const documentRef = db.collection('Usernames').doc(engineer.id);
+    documentRef.update({
+      Status:'Disabled',
+    })
+    .then(() => {
+  
+      showSucess("        User is successfully disabled")
+          setDeleteCount((prev) => prev + 1); 
+    })
+    .catch((error) => {
+      console.error('Error updating engineer:', error);
     });
-  };
+  }
+
+ 
  
   const renderItem = ({ item }) => (
 
@@ -66,23 +57,16 @@ export default function ListEngineers({ navigation }) {
     <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
     
       <View style={{ flex: 1 , flexDirection:'row'}}>
-      <Spinner
-      visible={dataLoaded}
-      textContent={'Loading...'}
-      textStyle={{ color: '#FFF' }}
-    />       
+    
    <Image source={require('../assets/Engineer.png')} style={{width:50,height:50}}></Image>
           <Text style={{ fontWeight: 'bold', fontSize: 16,marginTop:20 }}>      {item.Username}</Text>
 
       </View>
-
-      <TouchableOpacity style={{ padding: 8 }} onPress={() => handleViewEngineer(item)}>
-        <Text style={{ color: 'blue' ,fontSize:17}}>View</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={{ padding: 8 }} onPress={() => handleAssignEngineer(item)}>
-        <Text style={{ color: 'blue',fontSize:17}}>Assign</Text>
-      </TouchableOpacity>
     
+      <TouchableOpacity style={{ padding: 8,marginTop:10 }} onPress={() => handleDisbaleAdmin(item)}>
+        <Text style={{ color: 'red' ,fontSize:17}}>Disable</Text>
+      </TouchableOpacity>
+      
     </View>
   );
 
@@ -102,7 +86,7 @@ export default function ListEngineers({ navigation }) {
         <Icon name="search" size={25} color="#ccc" style={{ padding: 8 }} />
         <TextInput
           style={{ flex: 1, height: 40, padding: 6 }}
-          placeholder="            Search Engineer by name"
+          placeholder="            Search Admin by name"
           onChangeText={handleSearch}
           value={searchText}
         />

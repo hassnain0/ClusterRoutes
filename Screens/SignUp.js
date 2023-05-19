@@ -1,20 +1,32 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,Image, ScrollView, Alert, ImageBackground } from 'react-native';
 import { horizontalScale, moderateScale, verticalScale } from './Dimension';
 import SignUPScreenCom from './SignUPScreen';
+import NetInfo from '@react-native-community/netinfo';
+import { db } from './Firbase';
+
 
 const SignUp= ({navigation}) => {
 
+ 
+  const [isConnected, setIsConnected] = useState(true);
+  useEffect(() => {
+   
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+   
+      
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
-  // const app=initializeApp(firebaseConfig);
-  // const auth=getAuth(app);
-
-  
 
   return (
     <ScrollView>
     <ImageBackground  style={styles.ImageBackgroundcontainer}source={require('../assets/ImageBackground.jpeg')}>
-   
+
     <SignUPScreenCom
    
       

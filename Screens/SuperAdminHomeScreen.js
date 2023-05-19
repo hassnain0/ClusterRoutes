@@ -1,24 +1,40 @@
-import React, {useEffect} from "react";
+import React, {useEffect,useState} from "react";
 import { StyleSheet,View, Text, TouchableOpacity, Alert, TextInput, ScrollView, BackHandler,Pressable,Image } from "react-native";
 import { moderateScale,horizontalScale, verticalScale } from "./Dimension";
 
 import { FloatingAction } from "react-native-floating-action";
-
+import NetInfo from '@react-native-community/netinfo';
 import firebase from "firebase/compat";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 
-import NetInfo from '@react-native-community/netinfo';
-import Temp from "./Temp";
+
+
 
 import { db,auth } from "./Firbase";
 import { showAlert, showError, showSucess } from "./Helper/Helper";
 import Login from "./Login";
 import ListEngineers from "./ListEngineers";
+import AdminList from "./AdminList";
+import ListEngineersAdmin from "./ListEngineersSuper";
 
 
-const AdminHomeScreen=({navigation})=>{
+const SuperAdminHomeScreen=({navigation})=>{
 
  
+
+  const [hasUserDocument, setHasUserDocument] = useState(false);
+  useEffect(() => {
+    const collectionRef = db.collection('Usernames').where('Status', '==', 'Disabled');
+    collectionRef.get().then((querySnapshot) => {
+      if (querySnapshot.size > 0) {
+        setHasUserDocument(true);
+      } else {
+        setHasUserDocument(false);
+      }
+    }).catch((error) => {
+      console.log('Error getting documents:', error);
+    });
+  }, []);
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
@@ -40,7 +56,7 @@ const AdminHomeScreen=({navigation})=>{
         );
         return true;
       };
-
+    
       BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
       return () =>
@@ -70,8 +86,16 @@ const AdminHomeScreen=({navigation})=>{
   };
   const NavigationContainer=useNavigation();
   const MoveScreen=()=>{
+    
+    NavigationContainer.navigate("ListEngineersAdmin")
+  }
+  const RequestScreen=()=>{
    
-    NavigationContainer.navigate("ListEngineers")
+    NavigationContainer.navigate("Request")
+  }
+  const AdminListScreen=()=>{
+    
+    NavigationContainer.navigate("AdminList")
   }
 useEffect(() => {
   navigation.setOptions({
@@ -82,13 +106,15 @@ useEffect(() => {
     ),
   });
 }, [])
-    
+    const ReportScreen=()=>{
+      NavigationContainer.navigate("Reports")
+    }
 const logout = () => {
  
   auth
     .signOut()
     .then(() => showSucess("                    Successfully logout"));
-    navigation.navigate("Login")
+    navigation.replace("Login")
 }
     
 
@@ -101,6 +127,18 @@ const logout = () => {
 <View style={styles.CardContainer}>
   <Image source={require('../assets/HomeScreen.png')}    style={styles.ImageContainer}></Image>
   <TouchableOpacity
+      onPress={AdminListScreen}
+        style={[
+          styles.TouchContainer2,
+         
+        ]}
+       
+       
+      >
+         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,}}>Admin's List     </Text>  
+      </TouchableOpacity>
+      
+  <TouchableOpacity
       onPress={MoveScreen}
         style={[
           styles.TouchContainer2,
@@ -109,11 +147,28 @@ const logout = () => {
        
        
       >
-         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,marginBottom:2}}>   Engineer's List  </Text>  
+         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,}}>Engineer's List  </Text>  
       </TouchableOpacity>
-   
+      <TouchableOpacity
+      onPress={RequestScreen}
+      style={[
+        styles.TouchContainer2,
+        ,
+      ]}
+    >
+      
+      <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white', marginBottom:9 }}>
+            Request's
+        {hasUserDocument && (
+          <Text style={{ color: 'red' ,fontSize:40}}>  • </Text>
+        )}
+      </Text>
+    </TouchableOpacity>
                      
-</View> 
+</View>
+  
+         
+      
         </View>
         </ScrollView>
       
@@ -150,7 +205,7 @@ TouchContainer2:{
   
   elevation:10,
   borderWidth:2,
-    marginBottom:100, 
+
   borderRadius:15,
   alignItems:'center',
   height:70,
@@ -201,4 +256,4 @@ MapContainer:{
       },
 });
 
-export default AdminHomeScreen;
+export default SuperAdminHomeScreen;

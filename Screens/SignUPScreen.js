@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,Image, ScrollView, Alert, KeyboardAvoidingView } from 'react-native';
 import firebase from "firebase/compat";
 import Login from '../Screens/Login';
@@ -8,13 +8,28 @@ import { auth, db } from './Firbase';
 import { horizontalScale, moderateScale, verticalScale } from './Dimension';
 import { showError, showSucess } from './Helper/Helper';
 
+import NetInfo from '@react-native-community/netinfo';
+import { useNavigation } from '@react-navigation/native';
+
 
 const SignUPScreenCom=({navigation})=>{
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   //Here usestate is used to initialize variables
   const [password, setPassword] = useState('');
-  
+  const [dataLoaded,setDataLoaded]=useState(false)
+  const [isConnected, setIsConnected] = useState(true);
+  useEffect(() => {
+   
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+   
+      
+    return () => {
+      unsubscribe();
+    };
+  }, []);
   const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [identity,setIdentity]=useState('')
@@ -23,35 +38,34 @@ const SignUPScreenCom=({navigation})=>{
   // const auth=getAuth(app);
 
   const handleSignUp = () => {
+   
+      if (!isConnected) {
+        showError("Please connect your internet connection")
+        return ;
+      }
+    
+
     if(!email&&!password&&!confirmPassword&&!username|!identity)
     {
       
-      showError("Please enter required details and also pick your identity")
+      showError("Please enter required details ")
     }
-    if(!identity=='Worker'||!identity=='Admin'){
-      showError("Please enter your identity")
-    }
-    if(identity==''){
-      showError("Please Select your Identity")
-    }
-    else{
-      const regex = /^[A-Z]/;
-      if (regex.test(email)) {
-        showError('Email should start with a lowercase letter');
-      
-      }
+   
       else{    
     if (password === confirmPassword) {
- createUserWithEmailAndPassword(auth,email,password)
+ 
+      createUserWithEmailAndPassword(auth,email,password)
  .then(userCredentials=>{
   addusernameFirebase(username)
-  showSucess("Signed In Sucessfully")
-    setEmail(''),
+  showSucess("Please Wait untill administrator allow you ")
+  
+  setEmail(''),
     setUsername(''),
     setPassword(''),
     setConfirmPassword(''),
     setPassword('')
-  navigation.navigate(Login)
+    navigation.navigate('Login')
+  
   
  })
  .catch(err => {
@@ -62,17 +76,24 @@ const SignUPScreenCom=({navigation})=>{
 
   if(!email&&!password&!confirmPassword&!identity)
   {
-    showError(err.code)
+    showError("Please enter required details")
   }
   if (err.code === 'auth/invalid-email') {
-showError(err.code);
+showError("Invalid email");
   }
 
   if(!email||!password||!confirmPassword){
-    showError(err.code)
+    showError("Please in")
   } 
   if (err.code === 'auth/email-already-in-use') {
-    showError(err.code);
+    showError("Email already in use");
+  }
+  if (err.code === 'auth/weak-password') {
+    showError("   Please input strong password");
+  }
+  else
+  {
+    console.log(err.code)
   }
 });
     }
@@ -81,33 +102,30 @@ showError(err.code);
     {
       showError("Password and confirm password not matched")
     }
-  }
+  
 }
   };
 
 
-  const handlePickerValueChange=(itemvalue)=>{
-   setIdentity(itemvalue)
 
-   console.log(identity)
-        
-      
-  }
   const addusernameFirebase = async (username) => {
      
-    if(identity=='Engineer'){    
+       
     try {
       
     
-  db.collection('Usernmaes')
-        .doc(email)
+    const lowercaseEmail = email.toLowerCase();
+     db.collection('Usernames')
+         .doc(lowercaseEmail)
         .set({
-          email:email,
+          email:lowercaseEmail,
           Username:username,
-          Value:identity,
+          Value:'Engineer',
+          Status:'Disabled',
         })
         .then(() => {
-          console.log('Document successfully written!');
+          // CheckData()
+        console.log("Document written successfully")
         })
         .catch((error) => {
           console.error('Error writing document: ', error);
@@ -116,49 +134,22 @@ showError(err.code);
 } catch(error){
 
 }}
-else
-{
-      
-  db.collection('Admins')
-        .doc(email)
-        .set({
-          email:email,
-          Value:identity,
-        })
-        .then(() => {
-          console.log('Document successfully written!');
-        })
-        .catch((error) => {
-          console.error('Error writing document: ', error);
-        });
-}  
-  }
+
 
   return(
       
 
       <KeyboardAvoidingView    style={styles.Cardcontainer}>    
-    
+   
 <Text style={{fontSize:50,fontWeight:'500',paddingRight:moderateScale(1)}}>Create new </Text>
 <Text style={{fontSize:50,fontWeight:'500',}}>Account </Text>
 <TouchableOpacity onPress={()=>navigation.navigate('Login')}>
      < Text style={{color:'black',fontSize:10 , padding:moderateScale(5), }}>  Already Registered ? Log in here</Text>
      </TouchableOpacity>
-<Text style={{fontSize:15,color:'#BCBCBC',paddingRight:moderateScale(210),paddingTop:10}}>Name</Text>
+<Text style={{fontSize:15,color:'#BCBCBC',paddingRight:moderateScale(210),paddingTop:10}}>NAME</Text>
      
       <TextInput placeholder='Enter your name' value={username} textAlign='center' auto onChangeText={text=>setUsername(text)} style={styles.InputContainer} ></TextInput>
-      <Text style={{fontSize:15,color:'#BCBCBC',paddingRight:moderateScale(210),paddingTop:10}}>Identity</Text>
-      <Picker
-        selectedValue={identity}
-        onValueChange={handlePickerValueChange}
-        style={{paddingRight:moderateScale(250),textShadowColor:'#ffff',backgroundColor:'#EBECF0',marginBottom:10}}
-        
-      >
-       <Picker.Item label="Select your Identity" value=""/>
-        <Picker.Item label="Admin" value="Admin" />
-        <Picker.Item label="Engineer" value="Engineer" />
-       
-      </Picker>
+      
       <Text style={{fontSize:15,color:'#BCBCBC',paddingRight:moderateScale(210),paddingTop:5}}>EMAIL</Text>
       <TextInput placeholder='Enter email'  value={email} textAlign='center' auto onChangeText={text=>setEmail(text)} style={styles.InputContainer} ></TextInput>
       <Text style={{fontSize:15,color:'#BCBCBC',paddingRight:moderateScale(180),paddingTop:5}}>PASSWORD</Text>

@@ -135,7 +135,7 @@ const LONGITUDE_DELTA=LATITUDE_DELTA*ASPECT_RATIO;
 
   });
 
- 
+ //
 
 
 
@@ -195,6 +195,7 @@ const AddPolycordinates=async()=>{
         const usersCollection=db.collection('LiveLocation')
       
         const currentUserEmail=route.params.email;
+
         // Query the collection for the document with the matching email
         const userDoc = await usersCollection.where('email', '==',currentUserEmail).get();
         
@@ -300,7 +301,7 @@ const AddPolycordinates=async()=>{
      <MapView
        
         ref={mapRef}
-
+        maxZoomLevel={16.5}
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         showsIndoors={true}
@@ -309,7 +310,6 @@ const AddPolycordinates=async()=>{
         initialRegion={{ latitude: 33.738045 , longitude: 73.084488, latitudeDelta:LATITUDE_DELTA, longitudeDelta:LONGITUDE_DELTA  }}
       > 
 
-      {polylines}
 
 
 {livecords.length > 0  ? (
@@ -320,6 +320,7 @@ const AddPolycordinates=async()=>{
   />
 ) : null}
 
+{polylines}
 { Object.keys(currlocation).length > 0 && (
   <Marker.Animated
   draggable={true}

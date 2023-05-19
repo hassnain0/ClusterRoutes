@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {View,StyleSheet, ImageBackground} from 'react-native'
 import { horizontalScale, moderateScale, verticalScale } from "./Dimension";
 import ForgotScreenComponent from "./ForgotScreenComponent";
 
 const ForgotScreen=({navigation})=>{
+
     return(
         <ImageBackground  style={styles.ImageBackgroundcontainer}source={require('../assets/ImageBackground.jpeg')}>
    
