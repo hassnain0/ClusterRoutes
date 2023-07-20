@@ -97,6 +97,7 @@ const SuperAdminHomeScreen=({navigation})=>{
     
     NavigationContainer.navigate("AdminList")
   }
+ 
 useEffect(() => {
   navigation.setOptions({
     headerRight: () => (
@@ -147,7 +148,18 @@ const logout = () => {
        
        
       >
-         <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white' ,}}>Engineer's List  </Text>  
+         <Text style={{  textAlign:'center',fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:90, color: 'white' ,}}>Engineer's List  </Text>  
+      </TouchableOpacity>
+      <TouchableOpacity
+      onPress={ReportScreen}
+        style={[
+          styles.TouchContainer2,
+         
+        ]}
+       
+       
+      >
+         <Text style={{ textAlign:'center',fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:130,marginRight:135, color: 'white' ,}}>Reports  </Text>  
       </TouchableOpacity>
       <TouchableOpacity
       onPress={RequestScreen}
@@ -157,7 +169,7 @@ const logout = () => {
       ]}
     >
       
-      <Text style={{ fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:100,marginRight:100, color: 'white', marginBottom:9 }}>
+      <Text style={{ textAlign:'center', fontSize: 20, borderColor:'#002F46',alignItems: 'center',marginLeft:110,marginRight:140, color: 'white', marginBottom:9 }}>
             Request's
         {hasUserDocument && (
           <Text style={{ color: 'red' ,fontSize:40}}>  • </Text>

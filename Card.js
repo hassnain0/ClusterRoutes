@@ -1,4 +1,4 @@
-import React, {useState,useEffect} from "react";
+ import React, {useState,useEffect} from "react";
 import { View,Alert,Text,TextInput,Button,TouchableOpacity, StyleSheet,KeyboardAvoidingView,Image} from "react-native";
 import { horizontalScale,verticalScale,moderateScale } from "./Screens/Dimension";
 import { db, firebaseConfig ,auth} from "./Screens/Firbase";
@@ -65,6 +65,7 @@ NavigationContainer.navigate("ForgotScreen")
     const lowercaseEmail=myEmail.toLowerCase();
     const doc = await db.collection('Usernames').doc(lowercaseEmail).get();
   
+    
     if (doc.exists) {
     
       const data = doc.data();
@@ -122,6 +123,7 @@ NavigationContainer.navigate("ForgotScreen")
             navigation.navigate(AdminHomeScreen)
           
             }).catch(error=>{
+              console.log(error)
             if(error.code=='auth/too-many-request'){
               setDataLoaded(false)
               Alert.alert('Too many wrong attempts ! Account Disabled please reset your password')

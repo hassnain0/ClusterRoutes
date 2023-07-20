@@ -1,10 +1,5 @@
 import React from 'react-native'
-import {StyleSheet,View, Button,Text,TouchableOpacity,Image,} from 'react-native'
-import Temp from './Temp';
-import MapView, { Marker } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
-import { GOOGLE_MAPS_APIKEY } from './GoogleAPI';
-import MapViewDirections from 'react-native-maps-directions';
+import {StyleSheet,View, Text,} from 'react-native'
 import { moderateScale } from './Dimension';
 
 export default function CalculateCard({distance}){

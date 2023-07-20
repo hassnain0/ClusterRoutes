@@ -225,7 +225,7 @@ const Map = ({ navigation }) => {
   }
 
   const AddPolycordinates = async () => {
-    '.'
+    
     const usersCollection = db.collection('LivePolyline')
 
     const currentUserEmail = firebase.auth().currentUser.email;
@@ -262,6 +262,18 @@ const Map = ({ navigation }) => {
   }
   //Storing live polyline
   const startTracking = async () => {
+
+    const email=firebase.auth().currentUser.email;
+   await db.collection('Reports').doc(email).update({
+    Status:"OnGoing"
+   }).then(()=>{
+   console.log("Report updated") 
+   }).catch((error)=>{
+console.log(error)
+  })
+
+
+    
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       return;
@@ -437,51 +449,34 @@ const Map = ({ navigation }) => {
   };
 
   const handlePostponed = () => {
-    console.log(inputText)
-    if (inputText === 'undefined') {
-      const currentUser = firebase.auth().currentUser.email
-      db.collection('Reports')
-        .doc(currentUser.uid)
-        .set({
-          email: currentUser,
-          Report: 'Postponed',
-          Status: 'Cancelled'
+  console.log(inputText)
+if(!inputText) {
+    showError("Please enter reason")
+}
 
-        })
-        .then(() => {
-          console.log('Document successfully written!');
-          showSucess("You cancelled your route")
-          NavigationContainer.goBack();
-
-        })
-        .catch((error) => {
-          console.error('Error writing document: ', error);
-        });
-    }
-    else {
-      const currentUser = firebase.auth().currentUser.email
-      db.collection('Reports')
-        .doc(currentUser.uid)
-        .set({
-          email: currentUser,
-          Report: inputText,
-          Status: 'Cancelled',
-
-        })
-        .then(() => {
-          console.log('Document successfully written!');
-          showSucess("                You cancelled your route")
-          NavigationContainer.goBack();
-
-        })
-        .catch((error) => {
-          console.error('Error writing document: ', error);
-        });
+    else{
+      
+      try{
+      const currentUser=firebase.auth().currentUser.email;
+      const currentdate=new Date().toLocaleDateString();
+      const Ref=  db.collection('Reports').doc(currentUser);
+      // Use the user's email as the document ID
+       
+      Ref.set({ CancelDate: currentdate,Status:'Cancelled',Report:inputText }, { merge: true })   
+        NavigationContainer.goBack();
+      }
+      catch(error){
+    
+      }
+     
     }
   }
 
+  
+
+
   const handleCancel = () => {
-    NavigationContainer.goBack();
+   setShowInput(false)
   }
   const handlePress = () => {
     setShowInput(true)
@@ -602,7 +597,7 @@ const Map = ({ navigation }) => {
 
             onPress={isTracking ? handleStop : startTracking}
           >
-            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 100, paddingRight: 50, color: 'white' }}>
+            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 70, paddingRight: 50, color: 'white' }}>
               {isTracking ? 'Stop' : 'Start'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -615,20 +610,20 @@ const Map = ({ navigation }) => {
 
             onPress={handleDone}
           >
-            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 20, paddingRight: 30, color: 'white', textAlignVertical: 'center' }}>Done</Text>
+            <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 20, paddingRight: 20, color: 'white', textAlignVertical: 'center' }}>Done</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={[
               styles.TouchContainer,
               {
-                backgroundColor: 'green',
+                backgroundColor: 'red',
               },
             ]}
 
-            onPress={handleConfirm}
+            onPress={handlePress}
           >
             <Text style={{ fontSize: 20, textAlign: 'center', alignItems: 'center', marginTop: 1, paddingLeft: 20, paddingRight: 30, color: 'white', }}>Cancel</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </View>
       </View>
 

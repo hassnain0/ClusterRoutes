@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import {Alert, View, Text, FlatList, TouchableOpacity,TextInput ,Image} from 'react-native';
 import { db,firebase } from './Firbase';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Spinner from 'react-native-loading-spinner-overlay';
 
 export default function ListEngineers({ navigation }) {
+
   const [engineers, setEngineers] = useState([]);
   const [dataLoaded,setDataLoaded]=useState(true)
   const [searchText, setSearchText] = useState('');
   useEffect(() => {
    
-    const collectionRef = db.collection('Usernames').where('Status', '==', 'Enabled').where('Value', '==', 'Engineer');
-    collectionRef.get().then((querySnapshot) => {
+      const collectionRef = db.collection('Usernames').where('Status', '==', 'Enabled').where('Value', '==', 'Engineer');
+      collectionRef.get().then((querySnapshot) => {
       const documents = [];
       querySnapshot.forEach((doc) => {
       const data = doc.data();
@@ -21,7 +21,6 @@ export default function ListEngineers({ navigation }) {
       setEngineers(documents)}).catch((error) => {
       console.log('Error getting engineers:', error);
     })
-   
   }, []);
 
   const handleSearch = (text) => {
@@ -33,15 +32,15 @@ export default function ListEngineers({ navigation }) {
       engineer.Username.toLowerCase().includes(searchText.toLowerCase())
   );
  
-  const handleViewEngineer = (engineer) => {
-   const email=engineer.email;
+    const handleViewEngineer = (engineer) => {
+    const email=engineer.email;
     const fileName = `${email}.kml`; 
     const storageRef = firebase.storage().ref().child(fileName);
     storageRef.getDownloadURL()
       .then((metadata) => {
+        
         navigation.navigate('ViewMap',{
-          email:engineer.email,
-          
+          email:engineer.email,         
       });
       })
       .catch((error) => {
@@ -52,25 +51,22 @@ export default function ListEngineers({ navigation }) {
    
   };
 
-  const handleAssignEngineer = (engineer) => {
-    navigation.navigate('SelectRoute',{
-        email:engineer.email,
-        
+     const handleAssignEngineer = (engineer) => {
+      console.log("engineer.Username",engineer.Username)
+     navigation.navigate('SelectRoute',{
+
+      
+     email:engineer.email,
+     username:engineer.Username        
     });
   };
  
   const renderItem = ({ item }) => (
 
-    
-
     <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
     
       <View style={{ flex: 1 , flexDirection:'row'}}>
-      <Spinner
-      visible={dataLoaded}
-      textContent={'Loading...'}
-      textStyle={{ color: '#FFF' }}
-    />       
+
    <Image source={require('../assets/Engineer.png')} style={{width:50,height:50}}></Image>
           <Text style={{ fontWeight: 'bold', fontSize: 16,marginTop:20 }}>      {item.Username}</Text>
 

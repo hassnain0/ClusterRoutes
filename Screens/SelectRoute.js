@@ -8,7 +8,7 @@ import { showSucess,showError } from './Helper/Helper';
 
 
 import * as MailComposer from 'expo-mail-composer';
-import {firebase} from './Firbase'
+import {db, firebase} from './Firbase'
 
 
 
@@ -57,9 +57,20 @@ const SelectRoute=({route})=>{
 };
 
 
- 
+const FirestoreReport=async()=>{
+  let username=route.params.username;
+  console.log("username");
+  const email=route.params.email;
+  const currentDate = new Date().toLocaleDateString();
 
-    const uploadFile = async (source) => { 
+  const Ref=db.collection("Reports").doc(email);
+  await Ref.set({ AssignedDate: currentDate,Status:'Assigned' }, { merge: true });
+   
+  console.log(`Stored current date in Firestore for ${email}`);
+
+}
+
+   const uploadFile = async (source) => {   
      
       const response = await fetch(source.uri);
       const blob = await response.blob();
@@ -81,17 +92,23 @@ const SelectRoute=({route})=>{
            
         await ref.put(blob);
         
-        console.log(`Uploaded KML file to Firebase Storage at ${ref.fullPath}`);
       }
     
+       console.log(`Uploaded KML file to Firebase Storage at ${ref.fullPath}`);
+       
+     FirestoreReport();
        handleDone();
-    
+
+       
+       
+
+      
     };
     
-    const handleDone=()=>{
-    try{
-    const Email=route.params.email;
-    MailComposer.composeAsync({
+        const handleDone=()=>{
+        try{
+        const Email=route.params.email;
+        MailComposer.composeAsync({
       recipients: [Email],
       subject: 'Cluster Routes',
       body: 'New route is waiting for you \n Note: Please send back email of completion on same email when you done \n Thankyou Regards TNSS GLOBAL ',

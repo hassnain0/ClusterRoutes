@@ -24,6 +24,7 @@ const Temp=({navigation})=>{
     <MapView
     style={styles.Cardcontainer}
     initialRegion={{
+      
       latitude:25.416868,
       longitude:68.274307,
       latitudeDelta:1.6164,
@@ -31,7 +32,7 @@ const Temp=({navigation})=>{
     }
     
   }
-  
+  maxZoomLevel={16}
   showsUserLocation={true}
   shouldRasterizeIOS={true}
   showsMyLocationButton={true}

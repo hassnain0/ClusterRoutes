@@ -17,7 +17,6 @@ const SignUPScreenCom=({navigation})=>{
   const [name, setName] = useState('');
   //Here usestate is used to initialize variables
   const [password, setPassword] = useState('');
-  const [dataLoaded,setDataLoaded]=useState(false)
   const [isConnected, setIsConnected] = useState(true);
   useEffect(() => {
    

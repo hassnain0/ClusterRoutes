@@ -11,7 +11,6 @@ import { db,auth } from "./Firbase";
 import { showAlert, showError, showSucess } from "./Helper/Helper";
 import Login from "./Login";
 
-
 const Home=({navigation})=>{
 
 
@@ -82,7 +81,7 @@ const logout = () => {
   
   auth
     .signOut()
-    .then(() => showSucess("                Successfully logout"));
+    .then(() => ("Successfully logout"));
     navigation.replace("Login")
 }
     const MoveScreen=()=>{
@@ -90,11 +89,9 @@ const logout = () => {
        NavigationContainer.navigate("ChooseRoute")
     }
 
-// }
-
- const NavigationContainer=useNavigation();
+const NavigationContainer=useNavigation();
 const checkDocExists=async()=>{
- const email=firebase.auth().currentUser.email
+const email=firebase.auth().currentUser.email
 
   const doc = await db.collection("Usernames").doc(email).get();
   
